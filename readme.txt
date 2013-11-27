@@ -4,11 +4,11 @@ Donate link: http://www.advancedstyle.com/
 Tags: woocommerce, oscommerce, import
 Requires at least: 3.5.1
 Tested up to: 3.6
-Stable tag: 1.1
+Stable tag: 1.2
 License: AGPLv3.0 or later
 License URI: http://opensource.org/licenses/AGPL-3.0
 
-Woocommerce osCommerce import allows you to import products, categories, customers and orders directly from osCommerce to Woocommerce
+Woocommerce osCommerce import allows you to import products, categories, customers, orders and pages directly from osCommerce to Woocommerce
 
 == Description ==
 NOTES:
@@ -48,11 +48,20 @@ Products including:
 - Product attributes
 - Special prices
 
+Customers including:
+- Address/Email/Phone/Name etc...
+- *NOTE* Passwords cannot be imported (due to the salted MD5s in osCommerce), so passwords are randomly generated upon import
+
+Orders including:
+- Products
+- Customers info (addresses etc...)
+
+Information Pages:
+- Only if you are running CRE Loaded, or have installed the Info Pages addon for osCommerce
+
 = What data is not imported? =
 
 Some data that is NOT yet supported includes:
-- Orders
-- Customers
 - Best Sellers
 
 == Screenshots ==
@@ -60,6 +69,10 @@ Some data that is NOT yet supported includes:
 1. Not available
 
 == Changelog ==
+
+= 1.2 =
+
+* Added information page imports (if your running CRE Loaded or have info pages installed for osCommerce)
 
 = 1.1 =
 

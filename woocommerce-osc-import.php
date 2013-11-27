@@ -4,7 +4,7 @@ Plugin Name: Woocommerce osCommerce Import
 Plugin URI: http://www.advancedstyle.com/
 Description: Import products, categories, customers and orders from osCommerce to Woocommerce
 Author: David Barnes
-Version: 1.1
+Version: 1.2
 Author URI: http://www.advancedstyle.com/
 */
 
@@ -36,6 +36,10 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		
 		if(file_exists($filename)){
 			$url = $filename;
+		}else{
+			//Encode the URL
+			$base = basename($url);
+			$url = str_replace($base,urlencode($base),$url);
 		}
 		
 		if($f = @file_get_contents($url)){
@@ -98,7 +102,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		global $wpdb, $oscdb, $import_cat_counter, $import_prod_counter;
 		
 		if(!empty($_POST)){
-			$oscdb = new wpdb($_POST['store_user'],$_POST['store_pass'],$_POST['store_dbname'],$_POST['store_host']);
+			$oscdb = new wpdb(trim($_POST['store_user']),trim($_POST['store_pass']),trim($_POST['store_dbname']),trim($_POST['store_host']));
 			if($oscdb->ready){
 				echo '<p>Starting...<em>(If the page stops loading or shows a timeout error, then just refresh the page and the importer will continue where it left off.  If you are using a shared server and are importing a lot of products you may need to refresh several times)</p>';
 				// Do customer import
@@ -154,7 +158,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 									update_user_meta( $user_id, $k, $v);
 								}
 								
-								wp_update_user(array('ID' => $user_id, 'role' => 'customer'));
+								if($user_id > 1){
+									wp_update_user(array('ID' => $user_id, 'role' => 'customer'));
+								}
 								
 								$import_customer_counter++;
 							}
@@ -193,7 +199,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 								));
 								update_post_meta($product_id, 'osc_id', $product['products_id']);
 								wp_set_object_terms($product_id, 'simple', 'product_type');
-								wp_set_object_terms($product_id, $categories[$product['categories_id']], 'product_cat');
+								wp_set_object_terms($product_id, (int)$categories[$product['categories_id']], 'product_cat');
 								update_post_meta($product_id, '_sku', $product['products_model']);
 								update_post_meta($product_id, '_regular_price', $product['products_price']);
 								update_post_meta($product_id, '_price', $product['products_price']);
@@ -201,6 +207,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 								update_post_meta($product_id, '_stock_status', ($product['products_status'] ? 'instock' : 'outofstock'));
 								update_post_meta($product_id, '_manage_stock', '1' );
 								update_post_meta($product_id, '_stock', $product['products_quantity']);
+								$import_prod_counter++;
 								
 								if($special = $oscdb->get_row("SELECT specials_new_products_price, expires_date FROM specials WHERE status=1 AND products_id='".$product_id."' LIMIT 1", ARRAY_A)){
 									update_post_meta($product_id, '_sale_price', $special['specials_new_products_price']);
@@ -216,7 +223,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 									$url = rtrim($_POST['store_url'],'/').'/images/'.urlencode($product['products_image']);
 									$attach_id = woocommerce_osc_import_image($url);
 								}
-								set_post_thumbnail($product_id, $attach_id);
+								if($attach_id > 0){
+									set_post_thumbnail($product_id, $attach_id);
+								}
 								
 								// Handle attributes
 								if($attributes = $oscdb->get_results("SELECT po.products_options_name, pov.products_options_values_name FROM products_attributes pa, products_options po, products_options_values pov WHERE pa.products_id='".$product['products_id']."' AND  pov.products_options_values_id = pa.options_values_id AND pov.language_id=po.language_id AND po.language_id=1 AND pa.options_id=products_options_id", ARRAY_A)){
@@ -413,6 +422,37 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				}
 				
 				
+				if($_POST['dtype']['pages'] == 1){
+					$page_import_counter = 0;
+					if($information_table = $oscdb->get_results("SHOW TABLES LIKE 'information'", ARRAY_A)){
+						if($information_pages = $oscdb->get_results("SELECT * FROM information WHERE language_id=1", ARRAY_A)){
+							foreach($information_pages as $information){
+								$existing_page = $wpdb->get_results("SELECT ID FROM $wpdb->posts WHERE post_type='page' AND LOWER(post_title)='".strtolower(esc_sql($information['information_title']))."'", ARRAY_A);
+								if(!$existing_page){
+									$existing_page = get_posts(array('post_type' => 'page','posts_per_page' => 1,'post_status' => 'any',
+																'meta_query' => array(
+																	array(
+																		'key' => 'osc_id',
+																		'value' => $information['information_id'],
+																	)
+														)));
+									if(!$existing_page){
+										$data = array('post_type' => 'page',
+													  'post_title' => $information['information_title'],
+													  'post_content' => $information['information_description'],
+													  'post_status' => 'publish'
+													  );
+										$page_id = wp_insert_post($data);
+										update_post_meta($page_id, 'osc_id', $information['information_id']);
+										$page_import_counter++;
+									}
+								}
+							}
+						}
+					}else{
+						echo '<p class="notice">The information (pages) table does not exist in this osCommerce installation.</p>';
+					}
+				}
 				
 				$success = true;
 			}else{
@@ -431,6 +471,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				echo '<p><strong>Categories Imported: '.$import_cat_counter.'</p>';
 				echo '<p><strong>Products Imported: '.$import_prod_counter.'</p>';
 			}
+			if($_POST['dtype']['pages'] == 1){
+				echo '<p><strong>Pages Imported: '.$page_import_counter.'</p>';
+			}
 		}else{
 		?>
 		<form action="<?php echo $_SERVER['REQUEST_URI'];?>" method="post">
@@ -444,7 +487,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
         <p>Data to Import:<br>
 		<label><input type="checkbox" name="dtype[customers]" value="1"> Customers (passwords will not be transferred)</label><br>
         <label><input type="checkbox" name="dtype[orders]" value="1"> Orders</label><br>
-        <label><input type="checkbox" name="dtype[products]" value="1"> Categories/Products</label>
+        <label><input type="checkbox" name="dtype[products]" value="1"> Categories/Products</label><br>
+        <label><input type="checkbox" name="dtype[pages]" value="1"> Information Pages</label>
         </p>
 		<p><input type="submit" value="Import Data" class="button button-primary button-large"></p>
 		</form>

@@ -4,7 +4,7 @@ Donate link: http://www.advancedstyle.com/
 Tags: woocommerce, oscommerce, import
 Requires at least: 3.5.1
 Tested up to: 3.6
-Stable tag: 1.2
+Stable tag: 1.2.1
 License: AGPLv3.0 or later
 License URI: http://opensource.org/licenses/AGPL-3.0
 
@@ -69,6 +69,11 @@ Some data that is NOT yet supported includes:
 1. Not available
 
 == Changelog ==
+
+= 1.2.1 =
+
+* Fixed error handling of category imports
+* Fixed issue with products from multiple categories being imported twice
 
 = 1.2 =
 

@@ -4,7 +4,7 @@ Plugin Name: Woocommerce osCommerce Import
 Plugin URI: http://www.advancedstyle.com/
 Description: Import products, categories, customers and orders from osCommerce to Woocommerce
 Author: David Barnes
-Version: 1.2
+Version: 1.2.1
 Author URI: http://www.advancedstyle.com/
 */
 
@@ -68,31 +68,33 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		$categories = $oscdb->get_results("SELECT c.*, cd.* FROM categories c, categories_description cd WHERE c.categories_id=cd.categories_id AND cd.language_id=1 AND c.parent_id='".(int)$parent."'", ARRAY_A);
 		if(!empty($categories)){
 			foreach($categories as $category){
-				$term = term_exists($category['categories_name'], 'product_cat', (int)$parent_term_id); // array is returned if taxonomy is given
-				if ((int)$term['term_id'] == 0) {
-					$term = wp_insert_term(
-					  $category['categories_name'], // the term 
-					  'product_cat', // the taxonomy
-					  array(
-						//'description'=> $category['categories_id'],
-						'parent'=> $parent_term_id
-					  )
-					);
-					delete_option('product_cat_children'); // clear the cache
-					
-					$attach_id = 0;
-					if($category['categories_image'] != ''){
-						$url = rtrim($_POST['store_url'],'/').'/images/'.urlencode($category['categories_image']);
-						$attach_id = woocommerce_osc_import_image($url);
+				if(!is_wp_error($category)){
+					$term = term_exists($category['categories_name'], 'product_cat', (int)$parent_term_id); // array is returned if taxonomy is given
+					if ((int)$term['term_id'] == 0) {
+						$term = wp_insert_term(
+						  $category['categories_name'], // the term 
+						  'product_cat', // the taxonomy
+						  array(
+							//'description'=> $category['categories_id'],
+							'parent'=> $parent_term_id
+						  )
+						);
+						delete_option('product_cat_children'); // clear the cache
+						
+						$attach_id = 0;
+						if($category['categories_image'] != ''){
+							$url = rtrim($_POST['store_url'],'/').'/images/'.urlencode($category['categories_image']);
+							$attach_id = woocommerce_osc_import_image($url);
+						}
+						add_woocommerce_term_meta($term['term_id'], 'order',$category['sort_order']);
+						add_woocommerce_term_meta($term['term_id'], 'display_type','');
+						add_woocommerce_term_meta($term['term_id'], 'thumbnail_id',(int)$attach_id);
+						add_woocommerce_term_meta($term['term_id'], 'osc_id',$category['categories_id']);
+						woocommerce_osc_run_cats($category['categories_id'], $term['term_id']);
+						$import_cat_counter ++;
+					}else{
+						woocommerce_osc_run_cats($category['categories_id'], $term['term_id']);
 					}
-					add_woocommerce_term_meta($term['term_id'], 'order',$category['sort_order']);
-					add_woocommerce_term_meta($term['term_id'], 'display_type','');
-					add_woocommerce_term_meta($term['term_id'], 'thumbnail_id',(int)$attach_id);
-					add_woocommerce_term_meta($term['term_id'], 'osc_id',$category['categories_id']);
-					woocommerce_osc_run_cats($category['categories_id'], $term['term_id']);
-					$import_cat_counter ++;
-				}else{
-					woocommerce_osc_run_cats($category['categories_id'], $term['term_id']);
 				}
 			}
 		}
@@ -180,7 +182,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					}
 					
 					// Import the products
-					if($products = $oscdb->get_results("SELECT p.*, pd.*, p2c.categories_id FROM products p, products_description pd, products_to_categories p2c WHERE p.products_id=pd.products_id AND pd.language_id=1 AND p.products_id=p2c.products_id", ARRAY_A)){
+					if($products = $oscdb->get_results("SELECT p.*, pd.*, p2c.categories_id FROM products p, products_description pd, products_to_categories p2c WHERE p.products_id=pd.products_id AND pd.language_id=1 AND p.products_id=p2c.products_id GROUP BY p.products_id", ARRAY_A)){
 						foreach($products as $product){
 							$existing_product = get_posts(array('post_type' => 'product','posts_per_page' => 1,'post_status' => 'any',
 														'meta_query' => array(

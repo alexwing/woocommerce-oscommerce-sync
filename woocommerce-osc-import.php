@@ -3,9 +3,12 @@
 Plugin Name: Woocommerce osCommerce Import
 Plugin URI: http://www.advancedstyle.com/
 Description: Import products, categories, customers and orders from osCommerce to Woocommerce
-Author: David Barnes
-Version: 1.2.1
-Author URI: http://www.advancedstyle.com/
+Folk Author: Alejandro Aranda
+Version: 1.2.2
+Folk Author URI: http://aaranda.hol.es
+
+Original Author: David Barnes
+Original  Author URI: http://www.advancedstyle.com/
 */
 
 if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
@@ -65,7 +68,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	function woocommerce_osc_run_cats($parent=0, $parent_term_id=0){
 		global $wpdb, $oscdb, $import_cat_counter;
 		
-		$categories = $oscdb->get_results("SELECT c.*, cd.* FROM categories c, categories_description cd WHERE c.categories_id=cd.categories_id AND cd.language_id=1 AND c.parent_id='".(int)$parent."'", ARRAY_A);
+		$categories = $oscdb->get_results("SELECT c.*, cd.* FROM categories c, categories_description cd WHERE c.categories_id=cd.categories_id AND c.parent_id='".(int)$parent."'", ARRAY_A);
 		if(!empty($categories)){
 			foreach($categories as $category){
 				if(!is_wp_error($category)){
@@ -101,13 +104,14 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	}
 	
 	function woocommerce_osc_submenu_page_callback() {
-		global $wpdb, $oscdb, $import_cat_counter, $import_prod_counter;
+		global $wpdb, $oscdb, $import_cat_counter, $import_prod_counter, $import_img_counter,$import_gallery_counter;
 		
 		if(!empty($_POST)){
 			$oscdb = new wpdb(trim($_POST['store_user']),trim($_POST['store_pass']),trim($_POST['store_dbname']),trim($_POST['store_host']));
 			if($oscdb->ready){
 				echo '<p>Starting...<em>(If the page stops loading or shows a timeout error, then just refresh the page and the importer will continue where it left off.  If you are using a shared server and are importing a lot of products you may need to refresh several times)</p>';
 				// Do customer import
+				
 				if($_POST['dtype']['customers'] == 1){
 					$country_data = $oscdb->get_results("SELECT * FROM countries", ARRAY_A);
 					$countries_id = array();
@@ -168,10 +172,12 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 							}
 						}
 					}
-				}
-				
-				if($_POST['dtype']['products'] == 1){
+				}				
+				if($_POST['dtype']['categories'] == 1){
 					woocommerce_osc_run_cats();
+				}
+				if($_POST['dtype']['products'] == 1){
+					//woocommerce_osc_run_cats();
 					
 					// Get all categories by OSC cat ID
 					$categories = array();
@@ -182,7 +188,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					}
 					
 					// Import the products
-					if($products = $oscdb->get_results("SELECT p.*, pd.*, p2c.categories_id FROM products p, products_description pd, products_to_categories p2c WHERE p.products_id=pd.products_id AND pd.language_id=1 AND p.products_id=p2c.products_id GROUP BY p.products_id", ARRAY_A)){
+					if($products = $oscdb->get_results("SELECT p.*, pd.*, p2c.categories_id FROM products p, products_description pd, products_to_categories p2c WHERE p.products_id=pd.products_id AND p.products_id=p2c.products_id GROUP BY p.products_id LIMIT 700 OFFSET 700", ARRAY_A)){
 						foreach($products as $product){
 							$existing_product = get_posts(array('post_type' => 'product','posts_per_page' => 1,'post_status' => 'any',
 														'meta_query' => array(
@@ -219,7 +225,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 										update_post_meta($product_id, '_sale_price_dates_from', date("Y-m-d"));
 									}
 								}
-								
+								/*
 								$attach_id = 0;
 								if($product['products_image'] != ''){
 									$url = rtrim($_POST['store_url'],'/').'/images/'.urlencode($product['products_image']);
@@ -228,9 +234,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 								if($attach_id > 0){
 									set_post_thumbnail($product_id, $attach_id);
 								}
-								
+								*/
 								// Handle attributes
-								if($attributes = $oscdb->get_results("SELECT po.products_options_name, pov.products_options_values_name FROM products_attributes pa, products_options po, products_options_values pov WHERE pa.products_id='".$product['products_id']."' AND  pov.products_options_values_id = pa.options_values_id AND pov.language_id=po.language_id AND po.language_id=1 AND pa.options_id=products_options_id", ARRAY_A)){
+								if($attributes = $oscdb->get_results("SELECT po.products_options_name, pov.products_options_values_name FROM products_attributes pa, products_options po, products_options_values pov WHERE pa.products_id='".$product['products_id']."' AND  pov.products_options_values_id = pa.options_values_id AND pov.language_id=po.language_id AND pa.options_id=products_options_id", ARRAY_A)){
 									wp_set_object_terms($product_id, 'variable', 'product_type');
 									
 									$attrib_array = array();
@@ -300,7 +306,127 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					}
 				}
 				
+				if($_POST['dtype']['delete'] == 1){
+					// Import the IMAGES
+					if($products = $oscdb->get_results("SELECT * FROM products", ARRAY_A)){
+						foreach($products as $product){
+							$existing_product = get_posts(array('post_type' => 'product','posts_per_page' => 1,'post_status' => 'any',
+														'meta_query' => array(
+															array(
+																'key' => 'osc_id',
+																'value' => $product['products_id'],
+															)
+												)));
+							//IF PROBLEMS UPDATES IN DATABASE AND RENAME FILES				
+							/*update products set products_image = replace(products_image, ' ', '-');
+							update products set products_image = replace(products_image, '(', '-');
+							update products set products_image = replace(products_image, ')', '-');
+							update products set products_image = replace(products_image, '+', '-');*/
+							if(!empty($existing_product)){
+								$product_id = $existing_product[0] -> ID;
+								$attach_id = -1;
+									delete_post_thumbnail( $product_id );
+									delete_post_meta($product_id, '_product_image_gallery', '');							
+							}
+						}
+					}
+				}				
 				
+				
+				if($_POST['dtype']['image'] == 1){
+					// Import the IMAGES
+					if($products = $oscdb->get_results("SELECT * FROM products", ARRAY_A)){
+						foreach($products as $product){
+							$existing_product = get_posts(array('post_type' => 'product','posts_per_page' => 1,'post_status' => 'any',
+														'meta_query' => array(
+															array(
+																'key' => 'osc_id',
+																'value' => $product['products_id'],
+															)
+												)));
+							//IF PROBLEMS UPDATES IN DATABASE AND RENAME FILES				
+							/*update products set products_image = replace(products_image, ' ', '-');
+							update products set products_image = replace(products_image, '(', '-');
+							update products set products_image = replace(products_image, ')', '-');
+							update products set products_image = replace(products_image, '+', '-');*/
+							if(!empty($existing_product)){
+								$product_id = $existing_product[0] -> ID;
+								$attach_id = 0;
+								if($product['products_image'] != ''){
+									$url = rtrim($_POST['store_url'],'/').'/images/'.($product['products_image']);
+									
+									global $wpdb;
+									$filename  = ($product['products_image']);
+									$image_src = $wp_upload_dir['baseurl'] . '/' . _wp_relative_upload_path( $filename );
+									$query = "SELECT ID FROM {$wpdb->posts} WHERE guid like '%$image_src'";
+									//echo $query;
+									$count = $wpdb->get_var($query);
+									if ($count != 0 && $count != null) {
+										$attach_id =   $count;
+										//echo ("Product Exist: " . $existing_product[0] -> ID . " Media Exist" . $attach_id ." [".$product['products_image']."]</br>");
+									} else {
+										$import_img_counter++;
+										$attach_id = woocommerce_osc_import_image($url);
+										echo ("Product Exist: " . $existing_product[0] -> ID . " New Media [".$url."]</br>");
+									}
+								}
+								if($attach_id > 0){
+									set_post_thumbnail($product_id, $attach_id);
+								}
+								
+								
+							}
+						}
+					}
+				}
+
+			    if($_POST['dtype']['gallery'] == 1){
+					// Import the IMAGES
+					if($products = $oscdb->get_results("SELECT * FROM products_images ORDER BY sort_order,image", ARRAY_A)){
+						foreach($products as $product){
+							$existing_product = get_posts(array('post_type' => 'product','posts_per_page' => 1,'post_status' => 'any',
+														'meta_query' => array(
+															array(
+																'key' => 'osc_id',
+																'value' => $product['products_id'],
+															)
+												)));
+							
+							//IF PROBLEMS UPDATES IN DATABASE AND RENAME FILES
+							/*update products_images set image = replace(image, ' ', '-');
+							update products_images set image = replace(image, '(', '-');
+							update products_images set image = replace(image, ')', '-');
+							update products_images set image = replace(image, '+', '-');*/
+							if(!empty($existing_product)){
+								$product_id = $existing_product[0] -> ID;
+								$attach_id = 0;
+								if($product['image'] != ''){
+									$url = rtrim($_POST['store_url'],'/').'/images/'.($product['image']);
+									
+									global $wpdb;
+									$filename  = ($product['image']);
+									$image_src = $wp_upload_dir['baseurl'] . '/' . _wp_relative_upload_path( $filename );
+									$query = "SELECT ID FROM {$wpdb->posts} WHERE guid like '%$image_src'";
+									$count = $wpdb->get_var($query);
+									if ($count != 0 && $count != null) {
+										$attach_id =   $count;
+										//echo ("Product Exist: " . $existing_product[0] -> ID . " Media Exist " . $attach_id ." [".$product['image']."]</br>");
+									} else {
+										$import_gallery_counter++;
+										$attach_id = woocommerce_osc_import_image($url);
+										echo ("Product Exist: " . $existing_product[0] -> ID . " New Media [".$url."]</br>");
+									}
+								}
+								if($attach_id > 0){
+									
+									update_post_meta( $product_id, '_product_image_gallery', $attach_id);
+								}
+								
+								
+							}
+						}
+					}
+				}				
 				if($_POST['dtype']['orders'] == 1){
 					$customers = $wpdb->get_results("SELECT ID FROM $wpdb->users", ARRAY_A);
 					$customer_id = array();
@@ -427,7 +553,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				if($_POST['dtype']['pages'] == 1){
 					$page_import_counter = 0;
 					if($information_table = $oscdb->get_results("SHOW TABLES LIKE 'information'", ARRAY_A)){
-						if($information_pages = $oscdb->get_results("SELECT * FROM information WHERE language_id=1", ARRAY_A)){
+						if($information_pages = $oscdb->get_results("SELECT * FROM information", ARRAY_A)){
 							foreach($information_pages as $information){
 								$existing_page = $wpdb->get_results("SELECT ID FROM $wpdb->posts WHERE post_type='page' AND LOWER(post_title)='".strtolower(esc_sql($information['information_title']))."'", ARRAY_A);
 								if(!$existing_page){
@@ -469,9 +595,17 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 			if($_POST['dtype']['orders'] == 1){
 				echo '<p><strong>Orders Imported: '.$order_import_counter.'</p>';
 			}
-			if($_POST['dtype']['products'] == 1){
+			if($_POST['dtype']['categories'] == 1){
 				echo '<p><strong>Categories Imported: '.$import_cat_counter.'</p>';
+			}
+			if($_POST['dtype']['products'] == 1){
 				echo '<p><strong>Products Imported: '.$import_prod_counter.'</p>';
+			}
+			if($_POST['dtype']['image'] == 1){
+				echo '<p><strong>Images Imported: '.$import_img_counter.'</p>';
+			}
+			if($_POST['dtype']['gallery'] == 1){
+				echo '<p><strong>Images gallery Imported: '.$import_gallery_counter.'</p>';
 			}
 			if($_POST['dtype']['pages'] == 1){
 				echo '<p><strong>Pages Imported: '.$page_import_counter.'</p>';
@@ -487,10 +621,14 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		<p><label>osCommerce Database Password: <input type="text" name="store_pass" value="<?php echo $_POST['store_pass'];?>"></label></p>
 		<p><label>osCommerce Database Name: <input type="text" name="store_dbname" value="<?php echo $_POST['store_dbname'];?>"></label></p>
         <p>Data to Import:<br>
-		<label><input type="checkbox" name="dtype[customers]" value="1"> Customers (passwords will not be transferred)</label><br>
-        <label><input type="checkbox" name="dtype[orders]" value="1"> Orders</label><br>
-        <label><input type="checkbox" name="dtype[products]" value="1"> Categories/Products</label><br>
-        <label><input type="checkbox" name="dtype[pages]" value="1"> Information Pages</label>
+		<label><input type="checkbox" name="dtype[customers]" value="1">Customers (passwords will not be transferred)</label><br>
+        <label><input type="checkbox" name="dtype[orders]" value="1">Orders</label><br>
+        <label><input type="checkbox" name="dtype[categories]" value="1">Categories</label><br>
+		<label><input type="checkbox" name="dtype[products]" value="1">Products</label><br>
+		<label><input type="checkbox" name="dtype[delete]" value="1">Products delete images </label><br>
+		<label><input type="checkbox" name="dtype[image]" value="1">Products Prefered image</label><br>
+		<label><input type="checkbox" name="dtype[gallery]" value="1">Products gallery</label><br>
+        <label><input type="checkbox" name="dtype[pages]" value="1">Information Pages</label>
         </p>
 		<p><input type="submit" value="Import Data" class="button button-primary button-large"></p>
 		</form>

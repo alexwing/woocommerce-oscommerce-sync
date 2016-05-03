@@ -8,7 +8,7 @@ Version: 1.2.2
 Folk Author URI: http://aaranda.hol.es
 
 Original Author: David Barnes
-Original  Author URI: http://www.advancedstyle.com/
+Original Author URI: http://www.advancedstyle.com/
 */
 
 if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
@@ -68,7 +68,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	function woocommerce_osc_run_cats($parent=0, $parent_term_id=0){
 		global $wpdb, $oscdb, $import_cat_counter;
 		
-		$categories = $oscdb->get_results("SELECT c.*, cd.* FROM categories c, categories_description cd WHERE c.categories_id=cd.categories_id AND c.parent_id='".(int)$parent."'", ARRAY_A);
+		$categories = $oscdb->get_results("SELECT c.*, cd.* FROM categories c, categories_description cd WHERE c.categories_id=cd.categories_id".$lang." AND c.parent_id='".(int)$parent."'", ARRAY_A);
 		if(!empty($categories)){
 			foreach($categories as $category){
 				if(!is_wp_error($category)){
@@ -104,7 +104,8 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	}
 	
 	function woocommerce_osc_submenu_page_callback() {
-		global $wpdb, $oscdb, $import_cat_counter, $import_prod_counter, $import_img_counter,$import_gallery_counter;
+		global $wpdb, $oscdb, $lang, $import_cat_counter, $import_prod_counter, $import_img_counter,$import_gallery_counter;
+		$lang = ' AND pd.language_id=1';
 		
 		if(!empty($_POST)){
 			$oscdb = new wpdb(trim($_POST['store_user']),trim($_POST['store_pass']),trim($_POST['store_dbname']),trim($_POST['store_host']));
@@ -188,7 +189,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					}
 					
 					// Import the products
-					if($products = $oscdb->get_results("SELECT p.*, pd.*, p2c.categories_id FROM products p, products_description pd, products_to_categories p2c WHERE p.products_id=pd.products_id AND p.products_id=p2c.products_id GROUP BY p.products_id LIMIT 700 OFFSET 700", ARRAY_A)){
+					if($products = $oscdb->get_results("SELECT p.*, pd.*, p2c.categories_id FROM products p, products_description pd, products_to_categories p2c WHERE p.products_id=pd.products_id AND p.products_id=p2c.products_id".$lang."  GROUP BY p.products_id", ARRAY_A)){
 						foreach($products as $product){
 							$existing_product = get_posts(array('post_type' => 'product','posts_per_page' => 1,'post_status' => 'any',
 														'meta_query' => array(
@@ -307,7 +308,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 				}
 				
 				if($_POST['dtype']['delete'] == 1){
-					// Import the IMAGES
+					// Delete post thumbs and gallery asociation
 					if($products = $oscdb->get_results("SELECT * FROM products", ARRAY_A)){
 						foreach($products as $product){
 							$existing_product = get_posts(array('post_type' => 'product','posts_per_page' => 1,'post_status' => 'any',
@@ -317,11 +318,6 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 																'value' => $product['products_id'],
 															)
 												)));
-							//IF PROBLEMS UPDATES IN DATABASE AND RENAME FILES				
-							/*update products set products_image = replace(products_image, ' ', '-');
-							update products set products_image = replace(products_image, '(', '-');
-							update products set products_image = replace(products_image, ')', '-');
-							update products set products_image = replace(products_image, '+', '-');*/
 							if(!empty($existing_product)){
 								$product_id = $existing_product[0] -> ID;
 								$attach_id = -1;
@@ -392,7 +388,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 															)
 												)));
 							
-							//IF PROBLEMS UPDATES IN DATABASE AND RENAME FILES
+							//IF PROBLEMS UPDATES IN DATABASE AND RENAME FILES 
 							/*update products_images set image = replace(image, ' ', '-');
 							update products_images set image = replace(image, '(', '-');
 							update products_images set image = replace(image, ')', '-');

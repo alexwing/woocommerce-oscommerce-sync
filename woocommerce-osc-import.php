@@ -105,7 +105,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 	
 	function woocommerce_osc_submenu_page_callback() {
 		global $wpdb, $oscdb, $lang, $import_cat_counter, $import_prod_counter, $import_img_counter,$import_gallery_counter;
-		$lang = ' AND pd.language_id=1';
+		//$lang = ' AND pd.language_id=1';
 		
 		if(!empty($_POST)){
 			$oscdb = new wpdb(trim($_POST['store_user']),trim($_POST['store_pass']),trim($_POST['store_dbname']),trim($_POST['store_host']));
@@ -189,7 +189,7 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 					}
 					
 					// Import the products
-					if($products = $oscdb->get_results("SELECT p.*, pd.*, p2c.categories_id FROM products p, products_description pd, products_to_categories p2c WHERE p.products_id=pd.products_id AND p.products_id=p2c.products_id".$lang."  GROUP BY p.products_id", ARRAY_A)){
+					if($products = $oscdb->get_results("SELECT p.*, pd.*, p2c.categories_id FROM products p, products_description pd, products_to_categories p2c WHERE p.products_id=pd.products_id AND p.products_id=p2c.products_id".$lang."  GROUP BY p.products_id LIMIT 70 OFFSET 700", ARRAY_A)){
 						foreach($products as $product){
 							$existing_product = get_posts(array('post_type' => 'product','posts_per_page' => 1,'post_status' => 'any',
 														'meta_query' => array(
@@ -610,6 +610,9 @@ if ( in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', g
 		?>
 		<form action="<?php echo $_SERVER['REQUEST_URI'];?>" method="post">
 		<h3>Import data from osCommerce</h3>
+		<p>For big products database can import in steps</p>		
+		<p><label>Limit (Nยบ Products/images to import): <input type="text" name="limit" value="<?php echo $_POST['limit'];?>"></label>
+		<label>Offset (Last product imported): <input type="text" name="offset" value="<?php echo $_POST['offset'];?>"></label></p>
 		<p>Enter your oscommerce database information (you will need remote access to your oscommerce database)</p>
 		<p><label>osCommerce store URL: <input type="text" name="store_url" value="<?php echo $_POST['store_url'];?>"></label></p>
 		<p><label>osCommerce Database Host: <input type="text" name="store_host" value="localhost"></label></p>

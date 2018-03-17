@@ -66,7 +66,7 @@ Some data that is NOT yet supported includes:
 
 == Screenshots ==
 
-1. Not available
+1. http://aaranda.es/wp-content/uploads/2016/10/WooCommerce-import.jpg
 
 == Changelog ==
 = 2.0.1 =

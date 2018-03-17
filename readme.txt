@@ -1,6 +1,6 @@
 === Woocommerce osCommerce Sync ===
 Contributors: alexwing,dave111223
-Plugin link: http://aaranda.es/woocommerce-oscommerce-import/
+Plugin link: http://aaranda.es/woocommerce-oscommerce-sync/
 Tags: woocommerce, oscommerce, import, sync
 Requires at least: 3.5.1
 Tested up to: 4.9.4–es_ES

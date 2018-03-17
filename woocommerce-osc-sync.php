@@ -12,7 +12,7 @@
 
 
 $output = '';
-$debug = true;
+$debug = false;
 
 if ($debug) {
      error_reporting(E_ALL ^ E_NOTICE);
@@ -699,42 +699,55 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                     echo '<p class="notice">Could not connect to the osCommerce database</p>';
                }
           }
-          if ($success) {
-               echo '<div class="alert alert-success"><h3>The oscommerce data was successfully imported</h3></div>';
-               /* if ($_POST['dtype']['customers'] == 1) {
-                 echo '<p><strong>Customers Imported: ' . $import_customer_counter . '</p>';
-                 }
-                 if ($_POST['dtype']['orders'] == 1) {
-                 echo '<p><strong>Orders Imported: ' . $order_import_counter . '</p>';
-                 }
-                 if ($_POST['dtype']['categories'] == 1) {
-                 echo '<p><strong>Categories Imported: ' . $import_cat_counter . '</p>';
-                 }
-                 if ($_POST['dtype']['products'] == 1) {
-                 echo '<p><strong>Products Imported: ' . $import_prod_counter . '</p>';
-                 }
-                 if ($_POST['dtype']['image'] == 1) {
-                 echo '<p><strong>Images Imported: ' . $import_img_counter . '</p>';
-                 }
-                 if ($_POST['dtype']['gallery'] == 1) {
-                 echo '<p><strong>Images gallery Imported: ' . $import_gallery_counter . '</p>';
-                 }
-                 if ($_POST['dtype']['pages'] == 1) {
-                 echo '<p><strong>Pages Imported: ' . $page_import_counter . '</p>';
-                 } */
-          }
           ?>
           <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post">
+
+              <?php
+              if ($success) {
+                   ?>
+                   <div class="row">
+                       <div class="col-lg-12">
+                           <div class="alert alert-success">
+                               <h3>The oscommerce data was successfully imported</h3>
+                               <?php
+                               if ($_POST['dtype']['customers'] == 1) {
+                                    echo '<p>Customers Imported: ' . $import_customer_counter . '</p>';
+                               }
+                               if ($_POST['dtype']['orders'] == 1) {
+                                    echo '<p>Orders Imported: ' . $order_import_counter . '</p>';
+                               }
+                               if ($_POST['dtype']['categories'] == 1) {
+                                    echo '<p>Categories Imported: ' . $import_cat_counter . '</p>';
+                               }
+                               if ($_POST['dtype']['products'] == 1) {
+                                    echo '<p>Products Imported: ' . $import_prod_counter . '</p>';
+                               }
+                               if ($_POST['dtype']['image'] == 1) {
+                                    echo '<p>Images Imported: ' . $import_img_counter . '</p>';
+                               }
+                               if ($_POST['dtype']['gallery'] == 1) {
+                                    echo '<p>Images gallery Imported: ' . $import_gallery_counter . '</p>';
+                               }
+                               if ($_POST['dtype']['pages'] == 1) {
+                                    echo '<p>Pages Imported: ' . $page_import_counter . '</p>';
+                               }
+                               ?>
+                           </div>
+                       </div>
+                   </div>
+                   <?php
+              }
+              ?>
               <div class="row">
-                  <div class="col-md-6">
+                  <div class="col-md-6 form-control" style="background-color: #f1f1f1">
                       <h3>Import data from osCommerce</h3>
                       <p>For big products database can import in steps</p>		
                       <!--<p><label class="control-label">Limit (Products/images to import): <input type="text" name="limit" value="<?php echo $_POST['limit']; ?>"></label>-->
                       <label class="control-label">Debug: <input type="checkbox" name="debug" value="1"  <?php
-          if ($_POST['debug']) {
-               echo " checked ";
-          }
-          ?></label></p>
+                          if ($_POST['debug']) {
+                               echo " checked ";
+                          }
+                          ?></label></p>
                       <label class="control-label">Language (Id from osCommerce lang table): <input type="text" name="lang" value="<?php echo $_POST['lang']; ?>"></label></p>
                       <label class="control-label">Offset (Last product imported): <input type="text" name="offset" value="<?php echo $_POST['offset']; ?>"></label></p>
                       <label class="control-label">Limit (how many produts imported): <input type="text" name="limit" value="<?php echo $_POST['limit']; ?>"></label></p>
@@ -745,50 +758,50 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                       <p><label class="control-label">osCommerce Database Password: <input type="text" name="store_pass" value="<?php echo $_POST['store_pass']; ?>"></label></p>
                       <p><label class="control-label">osCommerce Database Name: <input type="text" name="store_dbname" value="<?php echo $_POST['store_dbname']; ?>"></label></p>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-6 form-control" style="background-color: #f1f1f1">
                       <h3>Data to Import:</h3>
                       <h5>It is recommended to follow the order of the list</h5>
                       <label class="control-label"><input type="checkbox" name="dtype[customers]" value="1" <?php
-                                                       if ($_POST['dtype']['customers']) {
-                                                            echo " checked ";
-                                                       }
-          ?>>Customers (passwords will not be transferred)</label><br>
+                          if ($_POST['dtype']['customers']) {
+                               echo " checked ";
+                          }
+                          ?>>Customers (passwords will not be transferred)</label><br>
 
                       <label class="control-label"><input type="checkbox" name="dtype[categories]" value="1" <?php
-                if ($_POST['dtype']['categories']) {
-                     echo " checked ";
-                }
-          ?>>Categories</label><br>
+                          if ($_POST['dtype']['categories']) {
+                               echo " checked ";
+                          }
+                          ?>>Categories</label><br>
                       <label class="control-label"><input type="checkbox" name="dtype[products]" value="1"  <?php
-                if ($_POST['dtype']['products']) {
-                     echo " checked ";
-                }
-          ?>>Products</label><br>
+                          if ($_POST['dtype']['products']) {
+                               echo " checked ";
+                          }
+                          ?>>Products</label><br>
                       <label class="control-label"><input type="checkbox" name="dtype[delete]" value="1"  <?php
-                if ($_POST['dtype']['delete']) {
-                     echo " checked ";
-                }
-          ?>>Products delete images </label><br>
+                          if ($_POST['dtype']['delete']) {
+                               echo " checked ";
+                          }
+                          ?>>Products delete images </label><br>
                       <label class="control-label"><input type="checkbox" name="dtype[image]" value="1"  <?php
-                if ($_POST['dtype']['image']) {
-                     echo " checked ";
-                }
-          ?>>Products Prefered image</label><br>
+                          if ($_POST['dtype']['image']) {
+                               echo " checked ";
+                          }
+                          ?>>Products Prefered image</label><br>
                       <label class="control-label"><input type="checkbox" name="dtype[gallery]" value="1"  <?php
-                if ($_POST['dtype']['gallery']) {
-                     echo " checked ";
-                }
-          ?>>Products gallery</label><br>
+                          if ($_POST['dtype']['gallery']) {
+                               echo " checked ";
+                          }
+                          ?>>Products gallery</label><br>
                       <label class="control-label"><input type="checkbox" name="dtype[orders]" value="1" <?php
-                if ($_POST['dtype']['orders']) {
-                     echo " checked ";
-                }
-          ?>>Orders</label><br>
+                          if ($_POST['dtype']['orders']) {
+                               echo " checked ";
+                          }
+                          ?>>Orders</label><br>
                       <label class="control-label"><input type="checkbox" name="dtype[pages]" value="1"  <?php
-                if ($_POST['dtype']['pages']) {
-                     echo " checked ";
-                }
-          ?>>Information Pages</label>
+                          if ($_POST['dtype']['pages']) {
+                               echo " checked ";
+                          }
+                          ?>>Information Pages</label>
                       </p>
                       <p><input type="submit" value="Import Data" class="button button-primary button-large"></p>
                   </div>

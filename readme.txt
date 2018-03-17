@@ -1,14 +1,14 @@
-=== Woocommerce osCommerce Import ===
+=== Woocommerce osCommerce Sync ===
 Contributors: alexwing,dave111223
 Plugin link: http://aaranda.es/woocommerce-oscommerce-import/
-Tags: woocommerce, oscommerce, import
+Tags: woocommerce, oscommerce, import, sync
 Requires at least: 3.5.1
 Tested up to: 4.9.4–es_ES
 Stable tag: 2.0.1
 License: AGPLv3.0 or later
 License URI: http://opensource.org/licenses/AGPL-3.0
 
-Woocommerce osCommerce import allows you to import products, categories, customers, orders and pages directly from osCommerce to Woocommerce
+Woocommerce osCommerce Sync allows you to import products, categories, customers, orders and pages directly from osCommerce to Woocommerce
 
 == Description ==
 NOTES:
@@ -29,7 +29,7 @@ Note that when importing customers the passwords from osCommerce are NOT copied 
 1. Unzip/Extract the plugin zip to your computer
 2. Upload `\woocommerce-osc-import\` folder to the `/wp-content/plugins/` directory
 3. Activate the plugin through the 'Plugins' menu in WordPress
-4. Go to Woocommerce -> osCommerce Import
+4. Go to Woocommerce -> osCommerce Sync
 
 == Frequently Asked Questions ==
 

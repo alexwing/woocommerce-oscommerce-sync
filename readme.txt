@@ -66,7 +66,7 @@ Some data that is NOT yet supported includes:
 
 == Screenshots ==
 
-![ScreenShot](http://aaranda.es/wp-content/uploads/2016/10/WooCommerce-import.jpg)
+<a href="http://aaranda.es/wp-content/uploads/2016/10/WooCommerce-import.jpg" target="_blank"><img src="http://aaranda.es/wp-content/uploads/2016/10/WooCommerce-import.jpg" alt="capture"></a>
 
 == Changelog ==
 = 2.0.1 =

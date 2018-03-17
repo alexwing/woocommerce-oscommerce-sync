@@ -1,10 +1,10 @@
 === Woocommerce osCommerce Import ===
-Contributors: dave111223, alexwing
-Donate link: http://www.advancedstyle.com/
+Contributors: alexwing,dave111223
+Plugin link: http://aaranda.es/woocommerce-oscommerce-import/
 Tags: woocommerce, oscommerce, import
 Requires at least: 3.5.1
-Tested up to: 3.6
-Stable tag: 1.2.1
+Tested up to: 4.9.4–es_ES
+Stable tag: 2.0.1
 License: AGPLv3.0 or later
 License URI: http://opensource.org/licenses/AGPL-3.0
 
@@ -69,6 +69,13 @@ Some data that is NOT yet supported includes:
 1. Not available
 
 == Changelog ==
+= 2.0.1 =
+
+* Add debug mode
+* bootstrap 
+* Lang selector
+* limit and offset for produts
+
 = 1.2.2 =
 
 * Divide import categories/products in two sections 

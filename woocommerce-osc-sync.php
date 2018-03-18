@@ -22,21 +22,21 @@ if ($debug) {
      ini_set('display_errors', 0);
 }
 
-function mw_plugin_scripts() {
+function otw_plugin_scripts() {
      if (is_admin()) {
           wp_enqueue_script('admin_js_bootstrap', plugins_url('js/bootstrap.min.js', __FILE__), false, '3.3.7', false);
           wp_enqueue_style('admin_css_bootstrap', plugins_url('css/bootstrap.min.css', __FILE__), true, '3.3.7', 'all');
      }
 }
 
-add_action('admin_enqueue_scripts', 'mw_plugin_scripts');
+add_action('admin_enqueue_scripts', 'otw_plugin_scripts');
 if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
 
-     function woocommerce_osc_submenu_page() {
-          add_submenu_page('woocommerce', 'osCommerce Sync', 'osCommerce Sync', 'manage_options', 'woocommerce-osc-sync', 'woocommerce_osc_submenu_page_callback');
+     function otw_submenu_page() {
+          add_submenu_page('woocommerce', 'osCommerce Sync', 'osCommerce Sync', 'manage_options', 'woocommerce-osc-sync', 'otw_submenu_page_callback');
      }
 
-     function woocommerce_osc_cartesian_product($a) {
+     function otw_cartesian_product($a) {
           $result = array(array());
           foreach ($a as $k => $list) {
                $_tmp = array();
@@ -50,7 +50,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
           return $result;
      }
 
-     function woocommerce_osc_import_image($url) {
+     function otw_import_image($url) {
           $attach_id = 0;
           $wp_upload_dir = wp_upload_dir();
 
@@ -84,7 +84,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
           return $attach_id;
      }
 
-     function woocommerce_osc_run_cats($parent = 0, $parent_term_id = 0) {
+     function otw_run_cats($parent = 0, $parent_term_id = 0) {
           global $wpdb, $lang, $oscdb, $import_cat_counter;
 
 
@@ -93,15 +93,15 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                FROM categories c,
                categories_description cd 
                WHERE c.categories_id=cd.categories_id " . $lang . " AND c.parent_id='" . (int) $parent . "'";
-          //LGLog("importCategories", "Sql: " . $sql);
+          //otw_log("importCategories", "Sql: " . $sql);
           $categories = $oscdb->get_results($sql, ARRAY_A);
           if (!empty($categories)) {
-               LGLog("importCategories", "Categories total: " . count($categories));
+               otw_log("importCategories", "Categories total: " . count($categories));
                foreach ($categories as $category) {
                     if (!is_wp_error($category)) {
                          $term = term_exists($category['categories_name'], 'product_cat', (int) $parent_term_id); // array is returned if taxonomy is given
                          if ((int) $term['term_id'] == 0) {
-                              LGLog("importCategories", "New Categorie: " . json_encode($category));
+                              otw_log("importCategories", "New Categorie: " . json_encode($category));
                               $term = wp_insert_term(
                                       $category['categories_name'], // the term 
                                       'product_cat', // the taxonomy
@@ -115,24 +115,24 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                               $attach_id = 0;
                               if ($category['categories_image'] != '') {
                                    $url = rtrim($_POST['store_url'], '/') . '/images/' . urlencode($category['categories_image']);
-                                   $attach_id = woocommerce_osc_import_image($url);
+                                   $attach_id = otw_import_image($url);
                               }
                               add_woocommerce_term_meta($term['term_id'], 'order', $category['sort_order']);
                               add_woocommerce_term_meta($term['term_id'], 'display_type', '');
                               add_woocommerce_term_meta($term['term_id'], 'thumbnail_id', (int) $attach_id);
                               add_woocommerce_term_meta($term['term_id'], 'osc_id', $category['categories_id']);
-                              woocommerce_osc_run_cats($category['categories_id'], $term['term_id']);
+                              otw_run_cats($category['categories_id'], $term['term_id']);
                               $import_cat_counter ++;
                          } else {
-                              LGLog("importCategories", "Edit Categorie: " . json_encode($category));
-                              woocommerce_osc_run_cats($category['categories_id'], $term['term_id']);
+                              otw_log("importCategories", "Edit Categorie: " . json_encode($category));
+                              otw_run_cats($category['categories_id'], $term['term_id']);
                          }
                     }
                }
           }
      }
 
-     function woocommerce_osc_submenu_page_callback() {
+     function otw_submenu_page_callback() {
           global $debug, $output, $wpdb, $oscdb, $lang, $import_cat_counter, $import_prod_counter, $import_img_counter, $import_gallery_counter;
 
 
@@ -144,7 +144,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                }
                if (isset($_POST['lang'])) {
                     if (!empty($_POST['lang'])) {
-                         $lang = ' AND language_id=' . $_POST['lang'];
+                         $lang = ' AND language_id=' . (int) sanitize_text_field($_POST['lang']);
                     } else {
                          $lang = ' AND language_id=3';
                     }
@@ -152,15 +152,15 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                     $lang = ' AND language_id=3';
                }
 
-               $oscdb = new wpdb(trim($_POST['store_user']), trim($_POST['store_pass']), trim($_POST['store_dbname']), trim($_POST['store_host']));
+               $oscdb = new wpdb(sanitize_text_field(trim($_POST['store_user'])), trim(sanitize_text_field($_POST['store_pass'])), trim(sanitize_text_field($_POST['store_dbname'])), trim(sanitize_text_field($_POST['store_host'])));
                if ($oscdb->ready) {
                     ob_start();
                     // echo '<p>Starting...<em>(If the page stops loading or shows a timeout error, then just refresh the page and the importer will continue where it left off.  If you are using a shared server and are importing a lot of products you may need to refresh several times)</p>';
                     // Do customer import
 
                     if ($_POST['dtype']['customers'] == 1) {
-                         LGLogDelete("importCustomer");
-                         LGLog("importCustomer", "Start Import");
+                         otw_log_delete("importCustomer");
+                         otw_log("importCustomer", "Start Import");
                          $country_data = $oscdb->get_results("SELECT * FROM countries", ARRAY_A);
                          $countries_id = array();
                          foreach ($country_data as $cdata) {
@@ -189,9 +189,9 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                               INNER JOIN address_book ab ON  c.customers_id=ab.customers_id AND c.customers_default_address_id=ab.address_book_id
                               ";
                          if ($customers = $oscdb->get_results($sql, ARRAY_A)) {
-                              LGLog("importCustomer", "Customers total: " . count($customers));
+                              otw_log("importCustomer", "Customers total: " . count($customers));
                               foreach ($customers as $customer) {
-                                   LGLog("importCustomer", "Customer import: " . json_encode($customer));
+                                   otw_log("importCustomer", "Customer import: " . json_encode($customer));
                                    if (!email_exists($customer['customers_email_address'])) {
                                         $original = strtolower(preg_replace("/[^A-Za-z0-9]/", '', $customer['customers_firstname'] . $customer['customers_lastname']));
                                         $user_name = $original;
@@ -238,18 +238,18 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                    }
                               }
                          }
-                         LGLog("importCustomer", "End Import");
+                         otw_log("importCustomer", "End Import");
                     }
                     if ($_POST['dtype']['categories'] == 1) {
-                         LGLogDelete("importCategories");
-                         LGLog("importCategories", "Start Import");
-                         woocommerce_osc_run_cats();
-                         LGLog("importCategories", "End Import");
+                         otw_log_delete("importCategories");
+                         otw_log("importCategories", "Start Import");
+                         otw_run_cats();
+                         otw_log("importCategories", "End Import");
                     }
                     if ($_POST['dtype']['products'] == 1) {
-                         LGLogDelete("importProduct");
-                         LGLog("importProduct", "Start Import");
-                         LGLog("importProduct", "Lang: " . $lang);
+                         otw_log_delete("importProduct");
+                         otw_log("importProduct", "Start Import");
+                         otw_log("importProduct", "Lang: " . $lang);
 
                          if (isset($_POST['offset'])) {
                               $offset = $_POST['offset'];
@@ -261,7 +261,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                          } else {
                               $limit = 0;
                          }
-                         //woocommerce_osc_run_cats();
+                         //otw_run_cats();
                          // Get all categories by OSC cat ID
                          $categories = array();
                          $terms = get_terms('product_cat', array('hide_empty' => 0));
@@ -282,13 +282,13 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                     ";
                          if (!empty($limit)) {
                               $sql.= "LIMIT " . $limit . " OFFSET " . $offset;
-                              LGLog("importProduct", "Offset: " . $offset . " Limit:" . $limit);
+                              otw_log("importProduct", "Offset: " . $offset . " Limit:" . $limit);
                          }
                          // Import the products
 
 
                          if ($products = $oscdb->get_results($sql, ARRAY_A)) {
-                              LGLog("importProduct", "Products origin total: " . count($products));
+                              otw_log("importProduct", "Products origin total: " . count($products));
                               foreach ($products as $product) {
 
                                    $existing_product = get_posts(array('post_type' => 'product', 'posts_per_page' => 1, 'post_status' => 'any',
@@ -298,9 +298,9 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                                'value' => $product['products_id'],
                                            )
                                    )));
-                                   //LGLog("importProduct", "existe".json_encode($existing_product));
+                                   //otw_log("importProduct", "exist".json_encode($existing_product));
                                    if (empty($existing_product) && !empty($product['products_name'])) {
-                                        LGLog("importProduct", json_encode($product));
+                                        otw_log("importProduct", json_encode($product));
                                         $product_id = wp_insert_post(array(
                                             'post_title' => $product['products_name'],
                                             'post_content' => $product['products_description'],
@@ -332,7 +332,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                           $attach_id = 0;
                                           if($product['products_image'] != ''){
                                           $url = rtrim($_POST['store_url'],'/').'/images/'.urlencode($product['products_image']);
-                                          $attach_id = woocommerce_osc_import_image($url);
+                                          $attach_id = otw_import_image($url);
                                           }
                                           if($attach_id > 0){
                                           set_post_thumbnail($product_id, $attach_id);
@@ -357,7 +357,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                                   $attrib_combo[$slug][] = array($attribute['products_options_values_name'], ($attribute['price_prefix'] == '-' ? '-' : '') . $attribute['options_values_price']);
                                              }
                                              // Now it gets tricky...
-                                             $combos = woocommerce_osc_cartesian_product($attrib_combo);
+                                             $combos = otw_cartesian_product($attrib_combo);
                                              foreach ($combos as $combo) {
                                                   $variation_id = wp_insert_post(array(
                                                       'post_title' => 'Product ' . $product_id . ' Variation',
@@ -406,11 +406,11 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                    }
                               }
                          }
-                         LGLog("importProduct", "End Import");
+                         otw_log("importProduct", "End Import");
                     }
 
                     if ($_POST['dtype']['delete'] == 1) {
-                         LGLog("importDelete", "Start Import");
+                         otw_log("importDelete", "Start Import");
                          // Delete post thumbs and gallery asociation
                          if ($products = $oscdb->get_results("SELECT * FROM products", ARRAY_A)) {
                               foreach ($products as $product) {
@@ -422,7 +422,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                            )
                                    )));
                                    if (!empty($existing_product)) {
-                                        LGLog("importDelete", "Delete: " . json_encode($existing_product));
+                                        otw_log("importDelete", "Delete: " . json_encode($existing_product));
                                         $product_id = $existing_product[0]->ID;
                                         $attach_id = -1;
                                         delete_post_thumbnail($product_id);
@@ -430,13 +430,13 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                    }
                               }
                          }
-                         LGLog("importDelete", "End Import");
+                         otw_log("importDelete", "End Import");
                     }
 
 
                     if ($_POST['dtype']['image'] == 1) {
-                         LGLogDelete("importImage");
-                         LGLog("importImage", "Start Import");
+                         otw_log_delete("importImage");
+                         otw_log("importImage", "Start Import");
                          // Import the IMAGES
                          if ($products = $oscdb->get_results("SELECT * FROM products", ARRAY_A)) {
                               foreach ($products as $product) {
@@ -465,14 +465,14 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                              //echo $query;
                                              $count = $wpdb->get_var($query);
                                              if ($count != 0 && $count != null) {
-                                                  //LGLog ("importImage","Product image: ".$_POST['store_url'], '/' . '/images/' . $product['products_image']);
+                                                  //otw_log ("importImage","Product image: ".$_POST['store_url'], '/' . '/images/' . $product['products_image']);
                                                   $attach_id = $count;
                                                   //echo ("Product Exist: " . $existing_product[0] -> ID . " Media Exist" . $attach_id ." [".$product['products_image']."]</br>");
-                                                  LGLog("importImage", "Image edit: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  otw_log("importImage", "Image edit: " . $existing_product[0]->ID . " New Media [" . $url . "]");
                                              } else {
                                                   $import_img_counter++;
-                                                  $attach_id = woocommerce_osc_import_image($url);
-                                                  LGLog("importImage", "Image new: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  $attach_id = otw_import_image($url);
+                                                  otw_log("importImage", "Image new: " . $existing_product[0]->ID . " New Media [" . $url . "]");
                                              }
                                         }
                                         if ($attach_id > 0) {
@@ -481,12 +481,12 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                    }
                               }
                          }
-                         LGLog("importImage", "End Import");
+                         otw_log("importImage", "End Import");
                     }
 
                     if ($_POST['dtype']['gallery'] == 1) {
-                         LGLogDelete("importGallery");
-                         LGLog("importGallery", "Start Import");
+                         otw_log_delete("importGallery");
+                         otw_log("importGallery", "Start Import");
                          // Import the IMAGES
                          if ($products = $oscdb->get_results("SELECT * FROM products_images ORDER BY sort_order,image", ARRAY_A)) {
                               foreach ($products as $product) {
@@ -516,11 +516,11 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                              $count = $wpdb->get_var($query);
                                              if ($count != 0 && $count != null) {
                                                   $attach_id = $count;
-                                                  LGLog("importGallery", "Image edit: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  otw_log("importGallery", "Image edit: " . $existing_product[0]->ID . " New Media [" . $url . "]");
                                              } else {
                                                   $import_gallery_counter++;
-                                                  $attach_id = woocommerce_osc_import_image($url);
-                                                  LGLog("importGallery", "Image new: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  $attach_id = otw_import_image($url);
+                                                  otw_log("importGallery", "Image new: " . $existing_product[0]->ID . " New Media [" . $url . "]");
                                              }
                                         }
                                         if ($attach_id > 0) {
@@ -530,11 +530,11 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                    }
                               }
                          }
-                         LGLog("importGallery", "End Import");
+                         otw_log("importGallery", "End Import");
                     }
                     if ($_POST['dtype']['orders'] == 1) {
-                         LGLogDelete("importOrders");
-                         LGLog("importOrders", "Start Import");
+                         otw_log_delete("importOrders");
+                         otw_log("importOrders", "Start Import");
                          $customers = $wpdb->get_results("SELECT ID FROM $wpdb->users", ARRAY_A);
                          $customer_id = array();
                          foreach ($customers as $c) {
@@ -582,7 +582,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                             'post_title' => 'Order &ndash; ' . date("M d, Y @ h:i A", strtotime($order['date_purchased'])),
                                             'post_status' => 'publish'
                                         );
-                                        LGLog("importOrders", "Header: " . json_encode($data));
+                                        otw_log("importOrders", "Header: " . json_encode($data));
                                         $order_id = wp_insert_post($data);
 
 
@@ -627,7 +627,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                             '_order_currency' => $order['currency'],
                                             '_prices_include_tax' => 'no',
                                             'osc_id' => $order['orders_id']);
-                                        LGLog("importOrders", "address: " . json_encode($meta_data));
+                                        otw_log("importOrders", "address: " . json_encode($meta_data));
                                         foreach ($meta_data as $k => $v) {
                                              update_post_meta($order_id, $k, $v);
                                         }
@@ -647,7 +647,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                                            '_line_subtotal' => $product['final_price'] * $product['products_quantity'],
                                                            '_line_total' => $product['final_price'] * $product['products_quantity']);
 
-                                                       LGLog("importOrders", "product: " . json_encode($item_meta));
+                                                       otw_log("importOrders", "product: " . json_encode($item_meta));
                                                        foreach ($item_meta as $k => $v) {
                                                             woocommerce_add_order_item_meta($item_id, $k, $v);
                                                        }
@@ -657,7 +657,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                    }
                               }
                          }
-                         LGLog("importOrders", "End Import");
+                         otw_log("importOrders", "End Import");
                     }
 
 
@@ -815,16 +815,16 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
           }
      }
 
-     add_action('admin_menu', 'woocommerce_osc_submenu_page', 99);
+     add_action('admin_menu', 'otw_submenu_page', 99);
 }
 
 // function remove Log
-function LGLogDelete($log) {
+function otw_log_delete($log) {
      @unlink(get_home_path() . $log . '.log');
 }
 
 // function write Log
-function LGLog($log, $data) {
+function otw_log($log, $data) {
      global $debug;
      $fp = fopen(get_home_path() . $log . '.log', 'a+');
      fwrite($fp, date('Y-m-d H:i:s') . ' ' . $data . "\r\n");

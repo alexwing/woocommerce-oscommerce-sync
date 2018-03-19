@@ -5,7 +5,7 @@
   Description: Import products, categories, customers and orders from osCommerce to Woocommerce
   Author: Alejandro Aranda
   Version: 2.0.1
-  Folk Author URI: http://www.aaranda.es
+  Author URI: http://www.aaranda.es
   Original Author: David Barnes
   Original Author URI: http://www.advancedstyle.com/
  */
@@ -114,8 +114,10 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
 
                               $attach_id = 0;
                               if ($category['categories_image'] != '') {
-                                   $url = rtrim($_POST['store_url'], '/') . '/images/' . urlencode($category['categories_image']);
-                                   $attach_id = otw_import_image($url);
+                                   if (filter_var($_POST['store_url'], FILTER_VALIDATE_URL)) {
+                                        $url = rtrim($_POST['store_url'], '/') . '/images/' . urlencode($category['categories_image']);
+                                        $attach_id = otw_import_image($url);
+                                   }
                               }
                               add_woocommerce_term_meta($term['term_id'], 'order', $category['sort_order']);
                               add_woocommerce_term_meta($term['term_id'], 'display_type', '');
@@ -252,12 +254,13 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                          otw_log("importProduct", "Lang: " . $lang);
 
                          if (isset($_POST['offset'])) {
-                              $offset = $_POST['offset'];
+                              $offset = (int) sanitize_text_field($_POST['offset']);
                          } else {
                               $offset = 0;
                          }
+                          
                          if (isset($_POST['limit'])) {
-                              $limit = $_POST['limit'];
+                              $limit = (int) sanitize_text_field($_POST['limit']);
                          } else {
                               $limit = 0;
                          }
@@ -456,23 +459,25 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                         $product_id = $existing_product[0]->ID;
                                         $attach_id = 0;
                                         if ($product['products_image'] != '') {
-                                             $url = rtrim($_POST['store_url'], '/') . '/images/' . ($product['products_image']);
+                                             if (filter_var($_POST['store_url'], FILTER_VALIDATE_URL)) {
+                                                  $url = rtrim($_POST['store_url'], '/') . '/images/' . ($product['products_image']);
 
-                                             global $wpdb;
-                                             $filename = ($product['products_image']);
-                                             $image_src = $wp_upload_dir['baseurl'] . '/' . _wp_relative_upload_path($filename);
-                                             $query = "SELECT ID FROM {$wpdb->posts} WHERE guid like '%$image_src'";
-                                             //echo $query;
-                                             $count = $wpdb->get_var($query);
-                                             if ($count != 0 && $count != null) {
-                                                  //otw_log ("importImage","Product image: ".$_POST['store_url'], '/' . '/images/' . $product['products_image']);
-                                                  $attach_id = $count;
-                                                  //echo ("Product Exist: " . $existing_product[0] -> ID . " Media Exist" . $attach_id ." [".$product['products_image']."]</br>");
-                                                  otw_log("importImage", "Image edit: " . $existing_product[0]->ID . " New Media [" . $url . "]");
-                                             } else {
-                                                  $import_img_counter++;
-                                                  $attach_id = otw_import_image($url);
-                                                  otw_log("importImage", "Image new: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  global $wpdb;
+                                                  $filename = ($product['products_image']);
+                                                  $image_src = $wp_upload_dir['baseurl'] . '/' . _wp_relative_upload_path($filename);
+                                                  $query = "SELECT ID FROM {$wpdb->posts} WHERE guid like '%$image_src'";
+                                                  //echo $query;
+                                                  $count = $wpdb->get_var($query);
+                                                  if ($count != 0 && $count != null) {
+                                                       //otw_log ("importImage","Product image: ".$_POST['store_url'], '/' . '/images/' . $product['products_image']);
+                                                       $attach_id = $count;
+                                                       //echo ("Product Exist: " . $existing_product[0] -> ID . " Media Exist" . $attach_id ." [".$product['products_image']."]</br>");
+                                                       otw_log("importImage", "Image edit: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  } else {
+                                                       $import_img_counter++;
+                                                       $attach_id = otw_import_image($url);
+                                                       otw_log("importImage", "Image new: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  }
                                              }
                                         }
                                         if ($attach_id > 0) {
@@ -507,20 +512,22 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                         $product_id = $existing_product[0]->ID;
                                         $attach_id = 0;
                                         if ($product['image'] != '') {
-                                             $url = rtrim($_POST['store_url'], '/') . '/images/' . ($product['image']);
+                                             if (filter_var($_POST['store_url'], FILTER_VALIDATE_URL)) {
+                                                  $url = rtrim($_POST['store_url'], '/') . '/images/' . ($product['image']);
 
-                                             global $wpdb;
-                                             $filename = ($product['image']);
-                                             $image_src = $wp_upload_dir['baseurl'] . '/' . _wp_relative_upload_path($filename);
-                                             $query = "SELECT ID FROM {$wpdb->posts} WHERE guid like '%$image_src'";
-                                             $count = $wpdb->get_var($query);
-                                             if ($count != 0 && $count != null) {
-                                                  $attach_id = $count;
-                                                  otw_log("importGallery", "Image edit: " . $existing_product[0]->ID . " New Media [" . $url . "]");
-                                             } else {
-                                                  $import_gallery_counter++;
-                                                  $attach_id = otw_import_image($url);
-                                                  otw_log("importGallery", "Image new: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  global $wpdb;
+                                                  $filename = ($product['image']);
+                                                  $image_src = $wp_upload_dir['baseurl'] . '/' . _wp_relative_upload_path($filename);
+                                                  $query = "SELECT ID FROM {$wpdb->posts} WHERE guid like '%$image_src'";
+                                                  $count = $wpdb->get_var($query);
+                                                  if ($count != 0 && $count != null) {
+                                                       $attach_id = $count;
+                                                       otw_log("importGallery", "Image edit: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  } else {
+                                                       $import_gallery_counter++;
+                                                       $attach_id = otw_import_image($url);
+                                                       otw_log("importGallery", "Image new: " . $existing_product[0]->ID . " New Media [" . $url . "]");
+                                                  }
                                              }
                                         }
                                         if ($attach_id > 0) {

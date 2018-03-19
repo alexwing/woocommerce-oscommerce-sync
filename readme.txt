@@ -75,6 +75,7 @@ http://aaranda.es/wp-content/uploads/2016/10/WooCommerce-import.jpg
 * bootstrap 
 * Lang selector
 * limit and offset for produts
+* Change project to Woocommerce osCommerce Sync
 
 = 1.2.2 =
 

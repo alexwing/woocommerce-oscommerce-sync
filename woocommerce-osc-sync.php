@@ -137,8 +137,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
      function otw_submenu_page_callback() {
           global $debug, $output, $wpdb, $oscdb, $lang, $import_cat_counter, $import_prod_counter, $import_img_counter, $import_gallery_counter;
 
-
-          if (!empty($_POST)) {
+          if (isset($_POST['sync_submit']) && wp_verify_nonce($_POST['sync_submit'], 'add-item') && !empty($_POST)) {
                if (isset($_POST['debug'])) {
                     $debug = true;
                } else {
@@ -707,9 +706,10 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                }
           }
           ?>
-          <form action="<?php echo $_SERVER['REQUEST_URI']; ?>" method="post">
+          <form method="post" action="">
 
               <?php
+              wp_nonce_field('add-item', 'sync_submit');
               if ($success) {
                    ?>
                    <div class="row">

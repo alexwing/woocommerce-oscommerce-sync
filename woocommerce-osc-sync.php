@@ -14,14 +14,6 @@
 $output = '';
 $debug = false;
 
-if ($debug) {
-     error_reporting(E_ALL ^ E_NOTICE);
-     ini_set('display_errors', 1);
-} else {
-     error_reporting(E_ERROR);
-     ini_set('display_errors', 0);
-}
-
 function otw_plugin_scripts() {
      if (is_admin()) {
           wp_enqueue_script('admin_js_bootstrap', plugins_url('js/bootstrap.min.js', __FILE__), false, '3.3.7', false);
@@ -114,7 +106,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
 
                               $attach_id = 0;
                               if ($category['categories_image'] != '') {
-                                   if (filter_var($_POST['store_url'], FILTER_VALIDATE_URL)) {
+                                   if (esc_url($_POST['store_url'])) {
                                         $url = rtrim($_POST['store_url'], '/') . '/images/' . urlencode($category['categories_image']);
                                         $attach_id = otw_import_image($url);
                                    }
@@ -458,7 +450,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                         $product_id = $existing_product[0]->ID;
                                         $attach_id = 0;
                                         if ($product['products_image'] != '') {
-                                             if (filter_var($_POST['store_url'], FILTER_VALIDATE_URL)) {
+                                             if (esc_url($_POST['store_url'])) {
                                                   $url = rtrim($_POST['store_url'], '/') . '/images/' . ($product['products_image']);
 
                                                   global $wpdb;
@@ -511,7 +503,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                         $product_id = $existing_product[0]->ID;
                                         $attach_id = 0;
                                         if ($product['image'] != '') {
-                                             if (filter_var($_POST['store_url'], FILTER_VALIDATE_URL)) {
+                                             if (esc_url($_POST['store_url'])) {
                                                   $url = rtrim($_POST['store_url'], '/') . '/images/' . ($product['image']);
 
                                                   global $wpdb;
@@ -749,15 +741,14 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                   <div class="col-md-6 form-control" style="background-color: #f1f1f1">
                       <h3>Import data from osCommerce</h3>
                       <p>For big products database can import in steps</p>		
-                      <!--<p><label class="control-label">Limit (Products/images to import): <input type="text" name="limit" value="<?php echo $_POST['limit']; ?>"></label>-->
-                      <label class="control-label">Debug: <input type="checkbox" name="debug" value="1"  <?php
+                      <p><label class="control-label">Debug: <input type="checkbox" name="debug" value="1"  <?php
                           if ($_POST['debug']) {
                                echo " checked ";
                           }
-                          ?></label></p>
-                      <label class="control-label">Language (Id from osCommerce lang table): <input type="text" name="lang" value="<?php echo sanitize_text_field($_POST['lang']); ?>"></label></p>
-                      <label class="control-label">Offset (Last product imported): <input type="text" name="offset" value="<?php echo sanitize_text_field($_POST['offset']); ?>"></label></p>
-                      <label class="control-label">Limit (how many produts imported): <input type="text" name="limit" value="<?php echo sanitize_text_field($_POST['limit']); ?>"></label></p>
+                          ?>></label><small>(Display and save a log file in WordPress root folder)</small></p>
+                      <p><label class="control-label">Language (Id from osCommerce lang table): <input type="text" name="lang" value="<?php echo sanitize_text_field($_POST['lang']); ?>"></label></p>
+                      <p><label class="control-label">Offset (Last product imported): <input type="text" name="offset" value="<?php echo sanitize_text_field($_POST['offset']); ?>"></label></p>
+                      <p><label class="control-label">Limit (how many produts imported): <input type="text" name="limit" value="<?php echo sanitize_text_field($_POST['limit']); ?>"></label></p>
                       <p>Enter your oscommerce database information (you will need remote access to your oscommerce database)</p>
                       <p><label class="control-label">osCommerce store URL: <input type="text" name="store_url" value="<?php echo sanitize_text_field($_POST['store_url']); ?>"></label></p>
                       <p><label class="control-label">osCommerce Database Host: <input type="text" name="store_host" value="localhost"></label></p>
@@ -809,7 +800,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                echo " checked ";
                           }
                           ?>>Information Pages</label>
-                      </p>
+                      
                       <p><input type="submit" value="Import Data" class="button button-primary button-large"></p>
                   </div>
               </div>
@@ -833,10 +824,10 @@ function otw_log_delete($log) {
 // function write Log
 function otw_log($log, $data) {
      global $debug;
-     $fp = fopen(get_home_path() . $log . '.log', 'a+');
-     fwrite($fp, date('Y-m-d H:i:s') . ' ' . $data . "\r\n");
-     fclose($fp);
      if ($debug) {
+          $fp = fopen(get_home_path() . $log . '.log', 'a+');
+          fwrite($fp, date('Y-m-d H:i:s') . ' ' . $data . "\r\n");
+          fclose($fp);
           echo "$data" . PHP_EOL;
      }
 }

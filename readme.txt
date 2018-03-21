@@ -72,10 +72,13 @@ http://aaranda.es/wp-content/uploads/2016/10/WooCommerce-import.jpg
 = 2.0.1 =
 
 * Add debug mode
-* bootstrap 
+* Generate logs files in WordPress parent folder.
+* Bootstrap 
 * Lang selector
-* limit and offset for produts
+* Limit and offset for produts
 * Change project to Woocommerce osCommerce Sync
+* Fix security bugs. 
+
 
 = 1.2.2 =
 

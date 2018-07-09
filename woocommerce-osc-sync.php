@@ -4,7 +4,7 @@
   Plugin URI: http://aaranda.es/woocommerce-oscommerce-sync/
   Description: Import products, categories, customers and orders from osCommerce to Woocommerce
   Author: Alejandro Aranda
-  Version: 2.0.1
+  Version: 2.0.2
   Author URI: http://www.aaranda.es
   Original Author: David Barnes
   Original Author URI: http://www.advancedstyle.com/
@@ -107,7 +107,8 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                               $attach_id = 0;
                               if ($category['categories_image'] != '') {
                                    if (esc_url($_POST['store_url'])) {
-                                        $url = rtrim($_POST['store_url'], '/') . '/images/' . urlencode($category['categories_image']);
+                                        //otw_log("importCategories", "Image: " . rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']));
+                                        $url = rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']);
                                         $attach_id = otw_import_image($url);
                                    }
                               }

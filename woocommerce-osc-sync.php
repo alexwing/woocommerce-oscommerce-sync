@@ -579,7 +579,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                             'post_author' => $customer_id[$order['customers_id']],
                                             'post_password' => $order_key,
                                             'post_title' => 'Order &ndash; ' . date("M d, Y @ h:i A", strtotime($order['date_purchased'])),
-                                            'post_status' => 'publish'
+                                            'post_status' => 'wc-completed'
                                         );
                                         otw_log("importOrders", "Header: " . json_encode($data));
                                         $order_id = wp_insert_post($data);
@@ -653,6 +653,8 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                                   }
                                              }
                                         }
+                                        
+                                        
                                    }
                               }
                          }

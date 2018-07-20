@@ -4,7 +4,7 @@
   Plugin URI: http://aaranda.es/woocommerce-oscommerce-sync/
   Description: Import products, categories, customers and orders from osCommerce to Woocommerce
   Author: Alejandro Aranda
-  Version: 2.0.4
+  Version: 2.0.5
   Author URI: http://www.aaranda.es
   Original Author: David Barnes
   Original Author URI: http://www.advancedstyle.com/
@@ -110,11 +110,11 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
 
                                 if (!empty($_POST['images_url'])) {
                                     //otw_log("importCategories", "Image: " . rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']));
-                                    $url = rtrim($_POST['store_url'], '/') . '/' . rtrim($_POST['store_url'], '/') . '/' . urlencode($category['categories_image']);
+                                    $url = rtrim($_POST['store_url'], '/') . '/' . rtrim($_POST['images_url'], '/') . '/' . urlencode($category['categories_image']);
                                 } else {                                                                                   //otw_log("importCategories", "Image: " . rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']));
                                     $url = rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']);
                                 }
-
+                                otw_log("importCategories", "Image: " .$url);
                                 $attach_id = otw_import_image($url);
                             }
                         }
@@ -125,7 +125,26 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                         otw_run_cats($category['categories_id'], $term['term_id']);
                         $import_cat_counter ++;
                     } else {
-                        otw_log("importCategories", "Edit Categorie: " . json_encode($category));
+                        otw_log("importCategories", "Edit Categorie: ".$term['term_id'] .".-." . json_encode($category));
+                        
+                        delete_option('product_cat_children'); // clear the cache
+
+                        $attach_id = 0;
+                        if ($category['categories_image'] != '') {
+                            if (esc_url($_POST['store_url'])) {
+
+                                if (!empty($_POST['images_url'])) {
+                                    //otw_log("importCategories", "Image: " . rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']));
+                                    $url = rtrim($_POST['store_url'], '/') . '/' . rtrim($_POST['images_url'], '/') . '/' . urlencode($category['categories_image']);
+                                } else {                                                                                   //otw_log("importCategories", "Image: " . rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']));
+                                    $url = rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']);
+                                }
+                                 otw_log("importCategories", "Image: " .$url);
+                                $attach_id = otw_import_image($url);
+                            }
+                        }
+                        delete_woocommerce_term_meta($term['term_id'], 'thumbnail_id');
+                        add_woocommerce_term_meta($term['term_id'], 'thumbnail_id', (int) $attach_id);
                         otw_run_cats($category['categories_id'], $term['term_id']);
                     }
                 }
@@ -519,7 +538,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                     if (esc_url($_POST['store_url'])) {
 
                                         if (!empty($_POST['images_url'])) {
-                                            $url = rtrim($_POST['store_url'], '/') . '/' . rtrim($_POST['store_url'], '/') . '/' . ($product['image']);
+                                            $url = rtrim($_POST['store_url'], '/') . '/' . rtrim($_POST['images_url'], '/') . '/' . ($product['image']);
                                         } else {                                                                                  
                                             $url = rtrim($_POST['store_url'], '/') . '/images/' . ($product['image']);
                                         }
@@ -768,7 +787,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                     <p><label class="control-label">Offset (Last product imported): <input type="text" name="offset" value="<?php echo sanitize_text_field($_POST['offset']); ?>"></label></p>
                     <p><label class="control-label">Limit (how many produts imported): <input type="text" name="limit" value="<?php echo sanitize_text_field($_POST['limit']); ?>"></label></p>
                     <p>Enter your oscommerce database information (you will need remote access to your oscommerce database)</p>
-                    <p><label class="control-label">osCommerce store URL: <input type="text" name="store_url" value="<?php echo sanitize_text_field($_POST['store_url']); ?>"></label><label class="control-label">&nbsp;&nbsp;&nbsp;Images directory: <small>(empty directory "/image") </small><input type="text" name="images_url" value="<?php echo sanitize_text_field($_POST['images_url']); ?>"></label></p>
+                    <p><label class="control-label">osCommerce store URL: <input type="text" name="store_url" value="<?php echo sanitize_text_field($_POST['store_url']); ?>"></label><label class="control-label">&nbsp;&nbsp;&nbsp;Images directory: <small>(empty directory "image") </small><input type="text" name="images_url" value="<?php echo sanitize_text_field($_POST['images_url']); ?>"></label></p>
                     <p><label class="control-label">osCommerce Database Host: <input type="text" name="store_host" value="localhost"></label></p>
                     <p><label class="control-label">osCommerce Database User: <input type="text" name="store_user" value="<?php echo sanitize_text_field($_POST['store_user']); ?>"></label></p>
                     <p><label class="control-label">osCommerce Database Password: <input type="text" name="store_pass" value="<?php echo sanitize_text_field($_POST['store_pass']); ?>"></label></p>

@@ -4,7 +4,7 @@
   Plugin URI: http://aaranda.es/woocommerce-oscommerce-sync/
   Description: Import products, categories, customers and orders from osCommerce to Woocommerce
   Author: Alejandro Aranda
-  Version: 2.0.5
+  Version: 2.0.6
   Author URI: http://www.aaranda.es
   Original Author: David Barnes
   Original Author URI: http://www.advancedstyle.com/
@@ -261,9 +261,45 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                 }
                 if ((int) $_POST['dtype']['categories'] == 1) {
                     otw_log_delete("importCategories");
+                    $import_cat_counter = 0;
                     otw_log("importCategories", "Start Import");
                     otw_run_cats();
                     otw_log("importCategories", "End Import");
+                }
+                if ((int) $_POST['dtype']['taxes'] == 1) {
+                    otw_log_delete("importtaxes");
+                    $import_tax_counter = 0;
+                    otw_log("importtaxes", "Start Import");
+                    $sql = "SELECT
+                        tr.tax_rates_id,
+                        tr.tax_rate,												
+                        tc.tax_class_title,
+                        tc.tax_class_description,
+                        tr.tax_priority,
+                        tr.tax_rate,
+                        tr.tax_description,
+                        z.*,
+                        c.*
+                        
+                      FROM
+                        tax_rates as tr
+                        INNER JOIN tax_class as tc ON tr.tax_class_id = tc.tax_class_id
+                        INNER JOIN zones as z ON z.zone_id = tr.tax_zone_id
+                        INNER JOIN countries as c ON c.countries_id = z.zone_country_id
+                    ";
+                    //Import the taxes
+                    if ($taxes = $oscdb->get_results($sql, ARRAY_A)) {
+                        otw_log("importtaxes", "taxes origin total: " . count($taxes));
+                        foreach ($taxes as $tax) {
+                             otw_log("importtaxes", json_encode($tax));
+                             
+                            $sql = "
+                                ";                             
+                             $import_tax_counter++;
+                        }
+                    }
+                    
+                    otw_log("importtaxes", "End Import");
                 }
                 if ((int) $_POST['dtype']['products'] == 1) {
                     otw_log_delete("importProduct");
@@ -338,6 +374,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                 update_post_meta($product_id, '_stock_status', ($product['products_status'] ? 'instock' : 'outofstock'));
                                 update_post_meta($product_id, '_manage_stock', '1');
                                 update_post_meta($product_id, '_stock', $product['products_quantity']);
+                                update_post_meta($product_id, '_weight', $product['products_weight']);
                                 $import_prod_counter++;
 
                                 if ($special = $oscdb->get_row("SELECT specials_new_products_price, expires_date FROM specials WHERE status=1 AND products_id='" . $product_id . "' LIMIT 1", ARRAY_A)) {
@@ -755,6 +792,9 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                             if ((int) $_POST['dtype']['categories'] == 1) {
                                 echo '<p>Categories Imported: ' . $import_cat_counter . '</p>';
                             }
+                            if ((int) $_POST['dtype']['taxes'] == 1) {
+                                echo '<p>Taxes Imported: ' . $import_tax_counter . '</p>';
+                            }
                             if ((int) $_POST['dtype']['products'] == 1) {
                                 echo '<p>Products Imported: ' . $import_prod_counter . '</p>';
                             }
@@ -807,6 +847,11 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                             echo " checked ";
                         }
                         ?>>Categories</label><br>
+                   <!-- <label class="control-label"><input type="checkbox" name="dtype[taxes]" value="1" <?php
+                        if ((int) $_POST['dtype']['taxes']) {
+                            echo " checked ";
+                        }
+                        ?>>Taxes</label><br>-->
                     <label class="control-label"><input type="checkbox" name="dtype[products]" value="1"  <?php
                         if ((int) $_POST['dtype']['products']) {
                             echo " checked ";

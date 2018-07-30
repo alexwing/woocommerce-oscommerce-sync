@@ -4,7 +4,7 @@
   Plugin URI: http://aaranda.es/woocommerce-oscommerce-sync/
   Description: Import products, categories, customers and orders from osCommerce to Woocommerce
   Author: Alejandro Aranda
-  Version: 2.0.6
+  Version: 2.0.7
   Author URI: http://www.aaranda.es
   Original Author: David Barnes
   Original Author URI: http://www.advancedstyle.com/
@@ -114,7 +114,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                 } else {                                                                                   //otw_log("importCategories", "Image: " . rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']));
                                     $url = rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']);
                                 }
-                                otw_log("importCategories", "Image: " .$url);
+                                otw_log("importCategories", "Image: " . $url);
                                 $attach_id = otw_import_image($url);
                             }
                         }
@@ -125,8 +125,8 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                         otw_run_cats($category['categories_id'], $term['term_id']);
                         $import_cat_counter ++;
                     } else {
-                        otw_log("importCategories", "Edit Categorie: ".$term['term_id'] .".-." . json_encode($category));
-                        
+                        otw_log("importCategories", "Edit Categorie: " . $term['term_id'] . ".-." . json_encode($category));
+
                         delete_option('product_cat_children'); // clear the cache
 
                         $attach_id = 0;
@@ -139,7 +139,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                 } else {                                                                                   //otw_log("importCategories", "Image: " . rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']));
                                     $url = rtrim($_POST['store_url'], '/') . '/image/' . urlencode($category['categories_image']);
                                 }
-                                 otw_log("importCategories", "Image: " .$url);
+                                otw_log("importCategories", "Image: " . $url);
                                 $attach_id = otw_import_image($url);
                             }
                         }
@@ -174,7 +174,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
             $oscdb = new wpdb(sanitize_text_field(trim($_POST['store_user'])), trim(sanitize_text_field($_POST['store_pass'])), trim(sanitize_text_field($_POST['store_dbname'])), trim(sanitize_text_field($_POST['store_host'])));
             if ($oscdb->ready) {
                 ob_start();
-                // echo '<p>Starting...<em>(If the page stops loading or shows a timeout error, then just refresh the page and the importer will continue where it left off.  If you are using a shared server and are importing a lot of products you may need to refresh several times)</p>';
+                // echo '<div class="form-group">Starting...<em>(If the page stops loading or shows a timeout error, then just refresh the page and the importer will continue where it left off.  If you are using a shared server and are importing a lot of products you may need to refresh several times)</div>';
                 // Do customer import
 
                 if ((int) $_POST['dtype']['customers'] == 1) {
@@ -289,16 +289,16 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                     ";
                     //Import the taxes
                     if ($taxes = $oscdb->get_results($sql, ARRAY_A)) {
-                        otw_log("importtaxes", "taxes origin total: " . count($taxes));
+                        otw_log("importtaxes", " taxes origin total: " . count($taxes));
                         foreach ($taxes as $tax) {
-                             otw_log("importtaxes", json_encode($tax));
-                             
+                            otw_log("importtaxes", json_encode($tax));
+
                             $sql = "
-                                ";                             
-                             $import_tax_counter++;
+                                ";
+                            $import_tax_counter++;
                         }
                     }
-                    
+
                     otw_log("importtaxes", "End Import");
                 }
                 if ((int) $_POST['dtype']['products'] == 1) {
@@ -576,7 +576,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
 
                                         if (!empty($_POST['images_url'])) {
                                             $url = rtrim($_POST['store_url'], '/') . '/' . rtrim($_POST['images_url'], '/') . '/' . ($product['image']);
-                                        } else {                                                                                  
+                                        } else {
                                             $url = rtrim($_POST['store_url'], '/') . '/images/' . ($product['image']);
                                         }
 
@@ -761,18 +761,18 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                             }
                         }
                     } else {
-                        echo '<p class="notice">The information (pages) table does not exist in this osCommerce installation.</p>';
+                        echo '<p class="notice">The information (pages) table does not exist in this osCommerce installation.</div>';
                     }
                 }
                 $output = ob_get_contents();
                 ob_end_clean();
                 $success = true;
             } else {
-                echo '<p class="notice">Could not connect to the osCommerce database</p>';
+                echo '<p class="notice">Could not connect to the osCommerce database</div>';
             }
         }
         ?>
-        <form method="post" action="">
+        <form method="post" action="" style="margin: 10px 15px;">
 
             <?php
             wp_nonce_field('otw_sync', 'sync_submit');
@@ -784,28 +784,28 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                             <h3>The oscommerce data was successfully imported</h3>
                             <?php
                             if ((int) $_POST['dtype']['customers'] == 1) {
-                                echo '<p>Customers Imported: ' . $import_customer_counter . '</p>';
+                                echo '<div class="form-group">Customers Imported: ' . $import_customer_counter . '</div>';
                             }
                             if ((int) $_POST['dtype']['orders'] == 1) {
-                                echo '<p>Orders Imported: ' . $order_import_counter . '</p>';
+                                echo '<div class="form-group">Orders Imported: ' . $order_import_counter . '</div>';
                             }
                             if ((int) $_POST['dtype']['categories'] == 1) {
-                                echo '<p>Categories Imported: ' . $import_cat_counter . '</p>';
+                                echo '<div class="form-group">Categories Imported: ' . $import_cat_counter . '</div>';
                             }
                             if ((int) $_POST['dtype']['taxes'] == 1) {
-                                echo '<p>Taxes Imported: ' . $import_tax_counter . '</p>';
+                                echo '<div class="form-group">Taxes Imported: ' . $import_tax_counter . '</div>';
                             }
                             if ((int) $_POST['dtype']['products'] == 1) {
-                                echo '<p>Products Imported: ' . $import_prod_counter . '</p>';
+                                echo '<div class="form-group">Products Imported: ' . $import_prod_counter . '</div>';
                             }
                             if ((int) $_POST['dtype']['image'] == 1) {
-                                echo '<p>Images Imported: ' . $import_img_counter . '</p>';
+                                echo '<div class="form-group">Images Imported: ' . $import_img_counter . '</div>';
                             }
                             if ((int) $_POST['dtype']['gallery'] == 1) {
-                                echo '<p>Images gallery Imported: ' . $import_gallery_counter . '</p>';
+                                echo '<div class="form-group">Images gallery Imported: ' . $import_gallery_counter . '</div>';
                             }
                             if ((int) $_POST['dtype']['pages'] == 1) {
-                                echo '<p>Pages Imported: ' . $page_import_counter . '</p>';
+                                echo '<div class="form-group">Pages Imported: ' . $page_import_counter . '</div>';
                             }
                             ?>
                         </div>
@@ -814,78 +814,126 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                 <?php
             }
             ?>
-            <div class="row">
-                <div class="col-md-6 form-control" style="background-color: #f1f1f1">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">OsCommerce Database Conection</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Products Configuration</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Select Imports</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active modal-body bg-light" id="home" role="tabpanel" aria-labelledby="home-tab">
+                    <h4>Enter your oscommerce database information </h4>
+                    <div class="alert alert-warning" role="alert">
+                        You will need remote access to your oscommerce database
+                    </div>                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label >osCommerce store URL: </label>
+                                <input class="form-control" type="text" name="store_url" value="<?php echo sanitize_text_field($_POST['store_url']); ?>">
+                                <small>Example: https://www.[your site].com/</small>   
+                                </label>
+                            </div>
+                            <div class="form-group"><label >osCommerce Database Host: </label><input class="form-control" type="text" name="store_host" value="localhost"></div>
+                            <div class="form-group"><label >osCommerce Database Name: </label><input class="form-control" type="text" name="store_dbname" value="<?php echo sanitize_text_field($_POST['store_dbname']); ?>"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label >Images directory: </label>
+                                <input class="form-control" type="text" name="images_url" value="<?php echo sanitize_text_field($_POST['images_url']); ?>">
+                                <small>Empty directory as default "image"</small>                                
+                            </div>
+                            <div class="form-group"><label >osCommerce Database User: </label><input class="form-control" type="text" name="store_user" value="<?php echo sanitize_text_field($_POST['store_user']); ?>"></div>
+                            <div class="form-group"><label >osCommerce Database Password: </label><input class="form-control" type="text" name="store_pass" value="<?php echo sanitize_text_field($_POST['store_pass']); ?>"></div>                            
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade  modal-body bg-light" id="profile" role="tabpanel" aria-labelledby="profile-tab">
                     <h3>Import data from osCommerce</h3>
-                    <p>For big products database can import in steps</p>		
-                    <p><label class="control-label">Debug: <input type="checkbox" name="debug" value="1"  <?php
-                            if ($_POST['debug']) {
+                    <div class="alert alert-info" role="alert">
+                       For big products database can import in steps (use fields Offset & Limit)
+                    </div>                                       
+                    <div class="col-md-12">
+                        <div class="form-group"><label >Language: </label><input class="form-control" type="text" name="lang" value="<?php echo sanitize_text_field($_POST['lang']); ?>"><small>Id from osCommerce lang table</small></div>
+                        <div class="form-group"><label >Offset: </label><input class="form-control" type="text" name="offset" value="<?php echo sanitize_text_field($_POST['offset']); ?>"><small>Last product imported</small></div>
+                        <div class="form-group"><label >Limit: </label><input class="form-control" type="text" name="limit" value="<?php echo sanitize_text_field($_POST['limit']); ?>"><small>how many products imported</small></div>        
+                    </div>
+
+                </div>
+                <div class="tab-pane fade  modal-body bg-light" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+                    <h3>Data to Import:</h3>
+                    <div class="alert alert-warning" role="alert">
+                       It is recommended to follow the order of the list
+                    </div>                     
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label ><input class="form-control" type="checkbox" name="dtype[customers]" value="1" <?php
+                                if ((int) $_POST['dtype']['customers']) {
+                                    echo " checked ";
+                                }
+                                ?>>Customers (passwords will not be transferred)</label><br>
+
+                            <label ><input class="form-control" type="checkbox" name="dtype[categories]" value="1" <?php
+                                if ((int) $_POST['dtype']['categories']) {
+                                    echo " checked ";
+                                }
+                                ?>>Categories</label><br>
+                           <!-- <label ><input class="form-control" type="checkbox" name="dtype[taxes]" value="1" <?php
+                            if ((int) $_POST['dtype']['taxes']) {
                                 echo " checked ";
                             }
-                            ?>></label><small>(Display and save a log file in WordPress root folder)</small></p>
-                    <p><label class="control-label">Language (Id from osCommerce lang table): <input type="text" name="lang" value="<?php echo sanitize_text_field($_POST['lang']); ?>"></label></p>
-                    <p><label class="control-label">Offset (Last product imported): <input type="text" name="offset" value="<?php echo sanitize_text_field($_POST['offset']); ?>"></label></p>
-                    <p><label class="control-label">Limit (how many produts imported): <input type="text" name="limit" value="<?php echo sanitize_text_field($_POST['limit']); ?>"></label></p>
-                    <p>Enter your oscommerce database information (you will need remote access to your oscommerce database)</p>
-                    <p><label class="control-label">osCommerce store URL: <input type="text" name="store_url" value="<?php echo sanitize_text_field($_POST['store_url']); ?>"></label><label class="control-label">&nbsp;&nbsp;&nbsp;Images directory: <small>(empty directory "image") </small><input type="text" name="images_url" value="<?php echo sanitize_text_field($_POST['images_url']); ?>"></label></p>
-                    <p><label class="control-label">osCommerce Database Host: <input type="text" name="store_host" value="localhost"></label></p>
-                    <p><label class="control-label">osCommerce Database User: <input type="text" name="store_user" value="<?php echo sanitize_text_field($_POST['store_user']); ?>"></label></p>
-                    <p><label class="control-label">osCommerce Database Password: <input type="text" name="store_pass" value="<?php echo sanitize_text_field($_POST['store_pass']); ?>"></label></p>
-                    <p><label class="control-label">osCommerce Database Name: <input type="text" name="store_dbname" value="<?php echo sanitize_text_field($_POST['store_dbname']); ?>"></label></p>
-                </div>
-                <div class="col-md-6 form-control" style="background-color: #f1f1f1">
-                    <h3>Data to Import:</h3>
-                    <h5>It is recommended to follow the order of the list</h5>
-                    <label class="control-label"><input type="checkbox" name="dtype[customers]" value="1" <?php
-                        if ((int) $_POST['dtype']['customers']) {
-                            echo " checked ";
-                        }
-                        ?>>Customers (passwords will not be transferred)</label><br>
+                            ?>>Taxes</label><br>-->
+                            <label ><input class="form-control" type="checkbox" name="dtype[products]" value="1"  <?php
+                                if ((int) $_POST['dtype']['products']) {
+                                    echo " checked ";
+                                }
+                                ?>>Products</label><br>
+                            <label ><input class="form-control" type="checkbox" name="dtype[delete]" value="1"  <?php
+                                if ((int) $_POST['dtype']['delete']) {
+                                    echo " checked ";
+                                }
+                                ?>>Products delete images </label><br>
+                            <label ><input class="form-control" type="checkbox" name="dtype[image]" value="1"  <?php
+                                if ((int) $_POST['dtype']['image']) {
+                                    echo " checked ";
+                                }
+                                ?>>Products Prefered image</label><br>
+                            <label ><input class="form-control" type="checkbox" name="dtype[gallery]" value="1"  <?php
+                                if ((int) $_POST['dtype']['gallery']) {
+                                    echo " checked ";
+                                }
+                                ?>>Products gallery</label><br>
+                            <label ><input class="form-control" type="checkbox" name="dtype[orders]" value="1" <?php
+                                if ((int) $_POST['dtype']['orders']) {
+                                    echo " checked ";
+                                }
+                                ?>>Orders</label><br>
+                            <label ><input class="form-control" type="checkbox" name="dtype[pages]" value="1"  <?php
+                                if ((int) $_POST['dtype']['pages']) {
+                                    echo " checked ";
+                                }
+                                ?>>Information Pages</label>
 
-                    <label class="control-label"><input type="checkbox" name="dtype[categories]" value="1" <?php
-                        if ((int) $_POST['dtype']['categories']) {
-                            echo " checked ";
-                        }
-                        ?>>Categories</label><br>
-                   <!-- <label class="control-label"><input type="checkbox" name="dtype[taxes]" value="1" <?php
-                        if ((int) $_POST['dtype']['taxes']) {
-                            echo " checked ";
-                        }
-                        ?>>Taxes</label><br>-->
-                    <label class="control-label"><input type="checkbox" name="dtype[products]" value="1"  <?php
-                        if ((int) $_POST['dtype']['products']) {
-                            echo " checked ";
-                        }
-                        ?>>Products</label><br>
-                    <label class="control-label"><input type="checkbox" name="dtype[delete]" value="1"  <?php
-                        if ((int) $_POST['dtype']['delete']) {
-                            echo " checked ";
-                        }
-                        ?>>Products delete images </label><br>
-                    <label class="control-label"><input type="checkbox" name="dtype[image]" value="1"  <?php
-                        if ((int) $_POST['dtype']['image']) {
-                            echo " checked ";
-                        }
-                        ?>>Products Prefered image</label><br>
-                    <label class="control-label"><input type="checkbox" name="dtype[gallery]" value="1"  <?php
-                        if ((int) $_POST['dtype']['gallery']) {
-                            echo " checked ";
-                        }
-                        ?>>Products gallery</label><br>
-                    <label class="control-label"><input type="checkbox" name="dtype[orders]" value="1" <?php
-                        if ((int) $_POST['dtype']['orders']) {
-                            echo " checked ";
-                        }
-                        ?>>Orders</label><br>
-                    <label class="control-label"><input type="checkbox" name="dtype[pages]" value="1"  <?php
-                        if ((int) $_POST['dtype']['pages']) {
-                            echo " checked ";
-                        }
-                        ?>>Information Pages</label>
 
-                    <p><input type="submit" value="Import Data" class="button button-primary button-large"></p>
+                        </div>
+                    </div>                    
+
                 </div>
-            </div>
+            </div>  
+            <div class="form-group"><label >Debug: <input class="form-control" type="checkbox" name="debug" value="1"  <?php
+                    if ($_POST['debug']) {
+                        echo " checked ";
+                    }
+                    ?>></label>
+                <small>(Display and save a log file in WordPress root folder)</small>
+                <div class="form-group"><input type="submit" value="Import Data"  class="btn btn-primary btn-lg"></div>                
+            </div>            
+
         </form>
         <?php
         if ($output) {

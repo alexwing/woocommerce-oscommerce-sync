@@ -1,0 +1,138 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: woocommerce-osc-sync\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-08-02 12:40+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/"
+
+#: woocommerce-osc-sync.php:830
+msgid "Enter your oscommerce database information"
+msgstr ""
+
+#. Name of the plugin
+msgid "Woocommerce osCommerce Sync"
+msgstr ""
+
+#. Description of the plugin
+msgid ""
+"Import products, categories, customers and orders from osCommerce to "
+"Woocommerce"
+msgstr ""
+
+#. URI of the plugin
+msgid "http://aaranda.es/woocommerce-oscommerce-sync/"
+msgstr ""
+
+#. Author of the plugin
+msgid "Alejandro Aranda"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "http://www.aaranda.es"
+msgstr ""
+
+msgid "You will need remote access to your oscommerce database"
+msgstr ""
+
+msgid "OsCommerce Database Conection"
+msgstr ""
+
+msgid "Products Configuration"
+msgstr ""
+
+msgid "Select Imports"
+msgstr ""
+
+msgid "Images directory: "
+msgstr ""
+
+msgid "osCommerce store URL: "
+msgstr ""
+
+msgid "Empty directory as default \"image\""
+msgstr ""
+
+msgid "osCommerce Database User: "
+msgstr ""
+
+msgid "osCommerce Database Password: "
+msgstr ""
+
+msgid "Import data from osCommerce"
+msgstr ""
+
+msgid ""
+"For big products database can import in steps (use fields Offset & Limit)"
+msgstr ""
+
+msgid "Language: "
+msgstr ""
+
+msgid "Offset: "
+msgstr ""
+
+msgid "Limit: "
+msgstr ""
+
+msgid "Data to Import:"
+msgstr ""
+
+msgid "It is recommended to follow the order of the list"
+msgstr ""
+
+msgid "Categories"
+msgstr ""
+
+msgid "Products"
+msgstr ""
+
+msgid "Products delete images"
+msgstr ""
+
+msgid "Products Prefered image"
+msgstr ""
+
+msgid "Products gallery"
+msgstr ""
+
+msgid "Orders"
+msgstr ""
+
+msgid "Information Pages"
+msgstr ""
+
+msgid "Example: https://www.yoursite.com/"
+msgstr ""
+
+msgid "osCommerce Database Host: "
+msgstr ""
+
+msgid "osCommerce Database Name: "
+msgstr ""
+
+msgid "Id from osCommerce lang table"
+msgstr ""
+
+msgid "Last product imported"
+msgstr ""
+
+msgid "how many products imported"
+msgstr ""
+
+msgid "Customers (passwords will not be transferred)"
+msgstr ""
+
+msgid "(Display and save a log file in WordPress root folder)"
+msgstr ""
+
+msgid "Import Data"
+msgstr ""

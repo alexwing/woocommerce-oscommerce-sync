@@ -4,7 +4,7 @@ Plugin link: https://github.com/alexwing/woocommerce-oscommerce-sync
 Tags: woocommerce, oscommerce, import, sync
 Requires at least: 3.5.1
 Tested up to: 4.9.4–es_ES
-Stable tag: 2.0.7
+Stable tag: 2.0.8
 License: AGPLv3.0 or later
 License URI: http://opensource.org/licenses/AGPL-3.0
 
@@ -69,6 +69,9 @@ Some data that is NOT yet supported includes:
 http://aaranda.es/wp-content/uploads/2016/10/WooCommerce-import.jpg
 
 == Changelog ==
+= 2.0.8 =
+* Add internationalization
+
 = 2.0.7 =
 * Include Bootstrap tabs and forms
 

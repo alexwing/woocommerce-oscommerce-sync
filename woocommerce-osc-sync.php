@@ -2,9 +2,11 @@
 /*
   Plugin Name: Woocommerce osCommerce Sync
   Plugin URI: http://aaranda.es/woocommerce-oscommerce-sync/
+  Text Domain: woocommerce-osc-sync
+  Domain Path: /languages
   Description: Import products, categories, customers and orders from osCommerce to Woocommerce
   Author: Alejandro Aranda
-  Version: 2.0.7
+  Version: 2.0.8
   Author URI: http://www.aaranda.es
   Original Author: David Barnes
   Original Author URI: http://www.advancedstyle.com/
@@ -24,6 +26,7 @@ function otw_plugin_scripts() {
 add_action('admin_enqueue_scripts', 'otw_plugin_scripts');
 if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
 
+    
     function otw_submenu_page() {
         add_submenu_page('woocommerce', 'osCommerce Sync', 'osCommerce Sync', 'manage_options', 'woocommerce-osc-sync', 'otw_submenu_page_callback');
     }
@@ -816,59 +819,59 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
             ?>
             <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">OsCommerce Database Conection</a>
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true"><?php _e( 'OsCommerce Database Conection', 'woocommerce-osc-sync' ); ?></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Products Configuration</a>
+                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false"><?php _e( 'Products Configuration', 'woocommerce-osc-sync' ); ?></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false">Select Imports</a>
+                    <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false"><?php _e( 'Select Imports', 'woocommerce-osc-sync' ); ?></a>
                 </li>
             </ul>
             <div class="tab-content" id="myTabContent">
                 <div class="tab-pane fade show active modal-body bg-light" id="home" role="tabpanel" aria-labelledby="home-tab">
-                    <h4>Enter your oscommerce database information </h4>
+                    <h4><?php _e( 'Enter your oscommerce database information', 'woocommerce-osc-sync' ); ?> </h4>
                     <div class="alert alert-warning" role="alert">
-                        You will need remote access to your oscommerce database
+                        <?php _e( 'You will need remote access to your oscommerce database', 'woocommerce-osc-sync' ); ?> 
                     </div>                    
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label >osCommerce store URL: </label>
+                                <label ><?php _e( 'osCommerce store URL: ', 'woocommerce-osc-sync' ); ?></label>
                                 <input class="form-control" type="text" name="store_url" value="<?php echo sanitize_text_field($_POST['store_url']); ?>">
-                                <small>Example: https://www.[your site].com/</small>   
+                                <small><?php _e( 'Example: https://www.yoursite.com/', 'woocommerce-osc-sync' ); ?></small>   
                                 </label>
                             </div>
-                            <div class="form-group"><label >osCommerce Database Host: </label><input class="form-control" type="text" name="store_host" value="localhost"></div>
-                            <div class="form-group"><label >osCommerce Database Name: </label><input class="form-control" type="text" name="store_dbname" value="<?php echo sanitize_text_field($_POST['store_dbname']); ?>"></div>
+                            <div class="form-group"><label ><?php _e( 'osCommerce Database Host: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="store_host" value="localhost"></div>
+                            <div class="form-group"><label ><?php _e( 'osCommerce Database Name: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="store_dbname" value="<?php echo sanitize_text_field($_POST['store_dbname']); ?>"></div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label >Images directory: </label>
+                                <label ><?php _e( 'Images directory: ', 'woocommerce-osc-sync' ); ?></label>
                                 <input class="form-control" type="text" name="images_url" value="<?php echo sanitize_text_field($_POST['images_url']); ?>">
-                                <small>Empty directory as default "image"</small>                                
+                                <small><?php _e( 'Empty directory as default "image"', 'woocommerce-osc-sync' ); ?></small>                                
                             </div>
-                            <div class="form-group"><label >osCommerce Database User: </label><input class="form-control" type="text" name="store_user" value="<?php echo sanitize_text_field($_POST['store_user']); ?>"></div>
-                            <div class="form-group"><label >osCommerce Database Password: </label><input class="form-control" type="text" name="store_pass" value="<?php echo sanitize_text_field($_POST['store_pass']); ?>"></div>                            
+                            <div class="form-group"><label ><?php _e( 'osCommerce Database User: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="store_user" value="<?php echo sanitize_text_field($_POST['store_user']); ?>"></div>
+                            <div class="form-group"><label ><?php _e( 'osCommerce Database Password: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="store_pass" value="<?php echo sanitize_text_field($_POST['store_pass']); ?>"></div>                            
                         </div>
                     </div>
                 </div>
                 <div class="tab-pane fade  modal-body bg-light" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                    <h3>Import data from osCommerce</h3>
+                    <h3><?php _e( 'Import data from osCommerce', 'woocommerce-osc-sync' ); ?></h3>
                     <div class="alert alert-info" role="alert">
-                       For big products database can import in steps (use fields Offset & Limit)
+                       <?php _e( 'For big products database can import in steps (use fields Offset & Limit)', 'woocommerce-osc-sync' ); ?>
                     </div>                                       
                     <div class="col-md-12">
-                        <div class="form-group"><label >Language: </label><input class="form-control" type="text" name="lang" value="<?php echo sanitize_text_field($_POST['lang']); ?>"><small>Id from osCommerce lang table</small></div>
-                        <div class="form-group"><label >Offset: </label><input class="form-control" type="text" name="offset" value="<?php echo sanitize_text_field($_POST['offset']); ?>"><small>Last product imported</small></div>
-                        <div class="form-group"><label >Limit: </label><input class="form-control" type="text" name="limit" value="<?php echo sanitize_text_field($_POST['limit']); ?>"><small>how many products imported</small></div>        
+                        <div class="form-group"><label ><?php _e( 'Language: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="lang" value="<?php echo sanitize_text_field($_POST['lang']); ?>"><small><?php _e( 'Id from osCommerce lang table', 'woocommerce-osc-sync' ); ?></small></div>
+                        <div class="form-group"><label ><?php _e( 'Offset: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="offset" value="<?php echo sanitize_text_field($_POST['offset']); ?>"><small><?php _e( 'Last product imported', 'woocommerce-osc-sync' ); ?></small></div>
+                        <div class="form-group"><label ><?php _e( 'Limit: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="limit" value="<?php echo sanitize_text_field($_POST['limit']); ?>"><small><?php _e( 'how many products imported', 'woocommerce-osc-sync' ); ?></small></div>        
                     </div>
 
                 </div>
                 <div class="tab-pane fade  modal-body bg-light" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-                    <h3>Data to Import:</h3>
+                    <h3><?php _e( 'Data to Import:', 'woocommerce-osc-sync' ); ?></h3>
                     <div class="alert alert-warning" role="alert">
-                       It is recommended to follow the order of the list
+                       <?php _e( 'It is recommended to follow the order of the list', 'woocommerce-osc-sync' ); ?>
                     </div>                     
                     <div class="row">
                         <div class="col-md-12">
@@ -876,13 +879,13 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                 if ((int) $_POST['dtype']['customers']) {
                                     echo " checked ";
                                 }
-                                ?>>Customers (passwords will not be transferred)</label><br>
+                                ?>><?php _e( 'Customers (passwords will not be transferred)', 'woocommerce-osc-sync' ); ?></label><br>
 
                             <label ><input class="form-control" type="checkbox" name="dtype[categories]" value="1" <?php
                                 if ((int) $_POST['dtype']['categories']) {
                                     echo " checked ";
                                 }
-                                ?>>Categories</label><br>
+                                ?>><?php _e( 'Categories', 'woocommerce-osc-sync' ); ?></label><br>
                            <!-- <label ><input class="form-control" type="checkbox" name="dtype[taxes]" value="1" <?php
                             if ((int) $_POST['dtype']['taxes']) {
                                 echo " checked ";
@@ -892,32 +895,32 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                 if ((int) $_POST['dtype']['products']) {
                                     echo " checked ";
                                 }
-                                ?>>Products</label><br>
+                                ?>><?php _e( 'Products', 'woocommerce-osc-sync' ); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[delete]" value="1"  <?php
                                 if ((int) $_POST['dtype']['delete']) {
                                     echo " checked ";
                                 }
-                                ?>>Products delete images </label><br>
+                                ?>><?php _e( 'Products delete images', 'woocommerce-osc-sync' ); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[image]" value="1"  <?php
                                 if ((int) $_POST['dtype']['image']) {
                                     echo " checked ";
                                 }
-                                ?>>Products Prefered image</label><br>
+                                ?>><?php _e( 'Products Prefered image', 'woocommerce-osc-sync' ); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[gallery]" value="1"  <?php
                                 if ((int) $_POST['dtype']['gallery']) {
                                     echo " checked ";
                                 }
-                                ?>>Products gallery</label><br>
+                                ?>><?php _e( 'Products gallery', 'woocommerce-osc-sync' ); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[orders]" value="1" <?php
                                 if ((int) $_POST['dtype']['orders']) {
                                     echo " checked ";
                                 }
-                                ?>>Orders</label><br>
+                                ?>><?php _e( 'Orders', 'woocommerce-osc-sync' ); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[pages]" value="1"  <?php
                                 if ((int) $_POST['dtype']['pages']) {
                                     echo " checked ";
                                 }
-                                ?>>Information Pages</label>
+                                ?>><?php _e( 'Information Pages', 'woocommerce-osc-sync' ); ?></label>
 
 
                         </div>
@@ -930,8 +933,8 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                         echo " checked ";
                     }
                     ?>></label>
-                <small>(Display and save a log file in WordPress root folder)</small>
-                <div class="form-group"><input type="submit" value="Import Data"  class="btn btn-primary btn-lg"></div>                
+                <small><?php _e( '(Display and save a log file in WordPress root folder)', 'woocommerce-osc-sync' ); ?></small>
+                <div class="form-group"><input type="submit" value="<?php _e( 'Import Data', 'woocommerce-osc-sync' ); ?>"  class="btn btn-primary btn-lg"></div>                
             </div>            
 
         </form>
@@ -961,4 +964,6 @@ function otw_log($log, $data) {
         echo "$data" . PHP_EOL;
     }
 }
+
+load_plugin_textdomain( 'woocommerce-osc-sync', false, basename( dirname( __FILE__ ) ) . '/languages' );
 ?>

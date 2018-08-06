@@ -69,6 +69,10 @@ Some data that is NOT yet supported includes:
 http://aaranda.es/wp-content/uploads/2016/10/WooCommerce-import.jpg
 
 == Changelog ==
+= 2.0.9 =
+* Empty field language import all languages in products and categories
+
+
 = 2.0.8 =
 * Add internationalization
 

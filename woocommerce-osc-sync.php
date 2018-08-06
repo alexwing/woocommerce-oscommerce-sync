@@ -6,7 +6,7 @@
   Domain Path: /languages
   Description: Import products, categories, customers and orders from osCommerce to Woocommerce
   Author: Alejandro Aranda
-  Version: 2.0.8
+  Version: 2.0.9
   Author URI: http://www.aaranda.es
   Original Author: David Barnes
   Original Author URI: http://www.advancedstyle.com/
@@ -26,7 +26,7 @@ function otw_plugin_scripts() {
 add_action('admin_enqueue_scripts', 'otw_plugin_scripts');
 if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
 
-    
+
     function otw_submenu_page() {
         add_submenu_page('woocommerce', 'osCommerce Sync', 'osCommerce Sync', 'manage_options', 'woocommerce-osc-sync', 'otw_submenu_page_callback');
     }
@@ -93,7 +93,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
         if (!empty($categories)) {
             otw_log("importCategories", "Categories total: " . count($categories));
             foreach ($categories as $category) {
-                if (!is_wp_error($category)) {
+                if (!is_wp_error($category) && $category['categories_name'] != '') {
                     $term = term_exists($category['categories_name'], 'product_cat', (int) $parent_term_id); // array is returned if taxonomy is given
                     if ((int) $term['term_id'] == 0) {
                         otw_log("importCategories", "New Categorie: " . json_encode($category));
@@ -108,6 +108,7 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                         delete_option('product_cat_children'); // clear the cache
 
                         $attach_id = 0;
+
                         if ($category['categories_image'] != '') {
                             if (esc_url($_POST['store_url'])) {
 
@@ -168,10 +169,12 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                 if (!empty($_POST['lang'])) {
                     $lang = ' AND language_id=' . (int) sanitize_text_field($_POST['lang']);
                 } else {
-                    $lang = ' AND language_id=3';
+                    //  $lang = ' AND language_id=3';
+                    $lang = ' ';
                 }
             } else {
-                $lang = ' AND language_id=3';
+                //  $lang = ' AND language_id=3';
+                $lang = ' ';
             }
 
             $oscdb = new wpdb(sanitize_text_field(trim($_POST['store_user'])), trim(sanitize_text_field($_POST['store_pass'])), trim(sanitize_text_field($_POST['store_dbname'])), trim(sanitize_text_field($_POST['store_host'])));
@@ -349,119 +352,120 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                     if ($products = $oscdb->get_results($sql, ARRAY_A)) {
                         otw_log("importProduct", "Products origin total: " . count($products));
                         foreach ($products as $product) {
+                            if ($product['products_name'] != '') {
+                                $existing_product = get_posts(array('post_type' => 'product', 'posts_per_page' => 1, 'post_status' => 'any',
+                                    'meta_query' => array(
+                                        array(
+                                            'key' => 'osc_id',
+                                            'value' => $product['products_id'],
+                                        )
+                                )));
+                                //otw_log("importProduct", "exist".json_encode($existing_product));
+                                if (empty($existing_product) && !empty($product['products_name'])) {
+                                    otw_log("importProduct", json_encode($product));
+                                    $product_id = wp_insert_post(array(
+                                        'post_title' => $product['products_name'],
+                                        'post_content' => $product['products_description'],
+                                        'post_status' => 'publish',
+                                        'post_type' => 'product',
+                                        'post_author' => 1
+                                    ));
+                                    update_post_meta($product_id, 'osc_id', $product['products_id']);
+                                    wp_set_object_terms($product_id, 'simple', 'product_type');
+                                    wp_set_object_terms($product_id, (int) $categories[$product['categories_id']], 'product_cat');
+                                    update_post_meta($product_id, '_sku', $product['products_model']);
+                                    update_post_meta($product_id, '_regular_price', $product['products_price']);
+                                    update_post_meta($product_id, '_price', $product['products_price']);
+                                    update_post_meta($product_id, '_visibility', 'visible');
+                                    update_post_meta($product_id, '_stock_status', ($product['products_status'] ? 'instock' : 'outofstock'));
+                                    update_post_meta($product_id, '_manage_stock', '1');
+                                    update_post_meta($product_id, '_stock', $product['products_quantity']);
+                                    update_post_meta($product_id, '_weight', $product['products_weight']);
+                                    $import_prod_counter++;
 
-                            $existing_product = get_posts(array('post_type' => 'product', 'posts_per_page' => 1, 'post_status' => 'any',
-                                'meta_query' => array(
-                                    array(
-                                        'key' => 'osc_id',
-                                        'value' => $product['products_id'],
-                                    )
-                            )));
-                            //otw_log("importProduct", "exist".json_encode($existing_product));
-                            if (empty($existing_product) && !empty($product['products_name'])) {
-                                otw_log("importProduct", json_encode($product));
-                                $product_id = wp_insert_post(array(
-                                    'post_title' => $product['products_name'],
-                                    'post_content' => $product['products_description'],
-                                    'post_status' => 'publish',
-                                    'post_type' => 'product',
-                                    'post_author' => 1
-                                ));
-                                update_post_meta($product_id, 'osc_id', $product['products_id']);
-                                wp_set_object_terms($product_id, 'simple', 'product_type');
-                                wp_set_object_terms($product_id, (int) $categories[$product['categories_id']], 'product_cat');
-                                update_post_meta($product_id, '_sku', $product['products_model']);
-                                update_post_meta($product_id, '_regular_price', $product['products_price']);
-                                update_post_meta($product_id, '_price', $product['products_price']);
-                                update_post_meta($product_id, '_visibility', 'visible');
-                                update_post_meta($product_id, '_stock_status', ($product['products_status'] ? 'instock' : 'outofstock'));
-                                update_post_meta($product_id, '_manage_stock', '1');
-                                update_post_meta($product_id, '_stock', $product['products_quantity']);
-                                update_post_meta($product_id, '_weight', $product['products_weight']);
-                                $import_prod_counter++;
-
-                                if ($special = $oscdb->get_row("SELECT specials_new_products_price, expires_date FROM specials WHERE status=1 AND products_id='" . $product_id . "' LIMIT 1", ARRAY_A)) {
-                                    update_post_meta($product_id, '_sale_price', $special['specials_new_products_price']);
-                                    $special['expires_date'] = strtotime($special['expires_date']);
-                                    if ($special['expires_date'] > time()) {
-                                        update_post_meta($product_id, '_sale_price_dates_to', date("Y-m-d", $special['expires_date']));
-                                        update_post_meta($product_id, '_sale_price_dates_from', date("Y-m-d"));
-                                    }
-                                }
-                                /*
-                                  $attach_id = 0;
-                                  if($product['products_image'] != ''){
-                                  $url = rtrim($_POST['store_url'],'/').'/images/'.urlencode($product['products_image']);
-                                  $attach_id = otw_import_image($url);
-                                  }
-                                  if($attach_id > 0){
-                                  set_post_thumbnail($product_id, $attach_id);
-                                  }
-                                 */
-                                // Handle attributes
-                                if ($attributes = $oscdb->get_results("SELECT po.products_options_name, pov.products_options_values_name FROM products_attributes pa, products_options po, products_options_values pov WHERE pa.products_id='" . $product['products_id'] . "' AND  pov.products_options_values_id = pa.options_values_id AND pov.language_id=po.language_id AND pa.options_id=products_options_id", ARRAY_A)) {
-                                    wp_set_object_terms($product_id, 'variable', 'product_type');
-
-                                    $attrib_array = array();
-                                    $attrib_combo = array();
-                                    $max_price = $product['products_price'];
-                                    $min_price = $product['products_price'];
-                                    foreach ($attributes as $attribute) {
-                                        $slug = sanitize_title($attribute['products_options_name']);
-                                        $attrib_array[$slug] = array('name' => $attribute['products_options_name'],
-                                            'value' => ltrim($attrib_array[$slug]['value'] . ' | ' . $attribute['products_options_values_name'], ' | '),
-                                            'position' => 0,
-                                            'is_visible' => 1,
-                                            'is_variation' => 1,
-                                            'is_taxonomy' => 0);
-                                        $attrib_combo[$slug][] = array($attribute['products_options_values_name'], ($attribute['price_prefix'] == '-' ? '-' : '') . $attribute['options_values_price']);
-                                    }
-                                    // Now it gets tricky...
-                                    $combos = otw_cartesian_product($attrib_combo);
-                                    foreach ($combos as $combo) {
-                                        $variation_id = wp_insert_post(array(
-                                            'post_title' => 'Product ' . $product_id . ' Variation',
-                                            'post_content' => '',
-                                            'post_status' => 'publish',
-                                            'post_type' => 'product_variation',
-                                            'post_author' => 1,
-                                            'post_parent' => $product_id
-                                        ));
-
-                                        $opt_price = $product['products_price'];
-
-                                        $special_price = $special['specials_new_products_price'];
-
-                                        foreach ($combo as $k => $v) {
-                                            update_post_meta($variation_id, 'attribute_' . $k, $v[0]);
-                                            $opt_price += $v[1];
-                                            $special_price += $v[1];
+                                    if ($special = $oscdb->get_row("SELECT specials_new_products_price, expires_date FROM specials WHERE status=1 AND products_id='" . $product_id . "' LIMIT 1", ARRAY_A)) {
+                                        update_post_meta($product_id, '_sale_price', $special['specials_new_products_price']);
+                                        $special['expires_date'] = strtotime($special['expires_date']);
+                                        if ($special['expires_date'] > time()) {
+                                            update_post_meta($product_id, '_sale_price_dates_to', date("Y-m-d", $special['expires_date']));
+                                            update_post_meta($product_id, '_sale_price_dates_from', date("Y-m-d"));
                                         }
-                                        update_post_meta($variation_id, '_sku', $product['products_model']);
-                                        update_post_meta($variation_id, '_regular_price', $opt_price);
-                                        update_post_meta($variation_id, '_price', $opt_price);
-                                        update_post_meta($variation_id, '_thumbnail_id', 0);
-                                        update_post_meta($variation_id, '_stock', $product['products_quantity']);
-                                        if ($special) {
-                                            update_post_meta($variation_id, '_sale_price', $special_price);
-                                            if ($special['expires_date'] > time()) {
-                                                update_post_meta($variation_id, '_sale_price_dates_to', date("Y-m-d", $special['expires_date']));
-                                                update_post_meta($variation_id, '_sale_price_dates_from', date("Y-m-d"));
+                                    }
+                                    /*
+                                      $attach_id = 0;
+                                      if($product['products_image'] != ''){
+                                      $url = rtrim($_POST['store_url'],'/').'/images/'.urlencode($product['products_image']);
+                                      $attach_id = otw_import_image($url);
+                                      }
+                                      if($attach_id > 0){
+                                      set_post_thumbnail($product_id, $attach_id);
+                                      }
+                                     */
+                                    // Handle attributes
+                                    if ($attributes = $oscdb->get_results("SELECT po.products_options_name, pov.products_options_values_name FROM products_attributes pa, products_options po, products_options_values pov WHERE pa.products_id='" . $product['products_id'] . "' AND  pov.products_options_values_id = pa.options_values_id AND pov.language_id=po.language_id AND pa.options_id=products_options_id", ARRAY_A)) {
+                                        wp_set_object_terms($product_id, 'variable', 'product_type');
+
+                                        $attrib_array = array();
+                                        $attrib_combo = array();
+                                        $max_price = $product['products_price'];
+                                        $min_price = $product['products_price'];
+                                        foreach ($attributes as $attribute) {
+                                            $slug = sanitize_title($attribute['products_options_name']);
+                                            $attrib_array[$slug] = array('name' => $attribute['products_options_name'],
+                                                'value' => ltrim($attrib_array[$slug]['value'] . ' | ' . $attribute['products_options_values_name'], ' | '),
+                                                'position' => 0,
+                                                'is_visible' => 1,
+                                                'is_variation' => 1,
+                                                'is_taxonomy' => 0);
+                                            $attrib_combo[$slug][] = array($attribute['products_options_values_name'], ($attribute['price_prefix'] == '-' ? '-' : '') . $attribute['options_values_price']);
+                                        }
+                                        // Now it gets tricky...
+                                        $combos = otw_cartesian_product($attrib_combo);
+                                        foreach ($combos as $combo) {
+                                            $variation_id = wp_insert_post(array(
+                                                'post_title' => 'Product ' . $product_id . ' Variation',
+                                                'post_content' => '',
+                                                'post_status' => 'publish',
+                                                'post_type' => 'product_variation',
+                                                'post_author' => 1,
+                                                'post_parent' => $product_id
+                                            ));
+
+                                            $opt_price = $product['products_price'];
+
+                                            $special_price = $special['specials_new_products_price'];
+
+                                            foreach ($combo as $k => $v) {
+                                                update_post_meta($variation_id, 'attribute_' . $k, $v[0]);
+                                                $opt_price += $v[1];
+                                                $special_price += $v[1];
+                                            }
+                                            update_post_meta($variation_id, '_sku', $product['products_model']);
+                                            update_post_meta($variation_id, '_regular_price', $opt_price);
+                                            update_post_meta($variation_id, '_price', $opt_price);
+                                            update_post_meta($variation_id, '_thumbnail_id', 0);
+                                            update_post_meta($variation_id, '_stock', $product['products_quantity']);
+                                            if ($special) {
+                                                update_post_meta($variation_id, '_sale_price', $special_price);
+                                                if ($special['expires_date'] > time()) {
+                                                    update_post_meta($variation_id, '_sale_price_dates_to', date("Y-m-d", $special['expires_date']));
+                                                    update_post_meta($variation_id, '_sale_price_dates_from', date("Y-m-d"));
+                                                }
+                                            }
+                                            if ($opt_price > $max_price) {
+                                                $max_price = $opt_price;
+                                            }
+                                            if ($opt_price < $min_price) {
+                                                $min_price = $opt_price;
                                             }
                                         }
-                                        if ($opt_price > $max_price) {
-                                            $max_price = $opt_price;
-                                        }
-                                        if ($opt_price < $min_price) {
-                                            $min_price = $opt_price;
-                                        }
-                                    }
 
-                                    update_post_meta($product_id, '_product_attributes', $attrib_array);
-                                    update_post_meta($product_id, '_max_variation_regular_price', $max_price);
-                                    update_post_meta($product_id, '_min_variation_regular_price', $min_price);
-                                    update_post_meta($product_id, '_max_variation_price', $max_price);
-                                    update_post_meta($product_id, '_min_variation_price', $min_price);
+                                        update_post_meta($product_id, '_product_attributes', $attrib_array);
+                                        update_post_meta($product_id, '_max_variation_regular_price', $max_price);
+                                        update_post_meta($product_id, '_min_variation_regular_price', $min_price);
+                                        update_post_meta($product_id, '_max_variation_price', $max_price);
+                                        update_post_meta($product_id, '_min_variation_price', $min_price);
+                                    }
                                 }
                             }
                         }
@@ -819,59 +823,59 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
             ?>
             <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true"><?php _e( 'OsCommerce Database Conection', 'woocommerce-osc-sync' ); ?></a>
+                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true"><?php _e('OsCommerce Database Conection', 'woocommerce-osc-sync'); ?></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false"><?php _e( 'Products Configuration', 'woocommerce-osc-sync' ); ?></a>
+                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false"><?php _e('Products Configuration', 'woocommerce-osc-sync'); ?></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false"><?php _e( 'Select Imports', 'woocommerce-osc-sync' ); ?></a>
+                    <a class="nav-link" id="contact-tab" data-toggle="tab" href="#contact" role="tab" aria-controls="contact" aria-selected="false"><?php _e('Select Imports', 'woocommerce-osc-sync'); ?></a>
                 </li>
             </ul>
             <div class="tab-content" id="myTabContent">
                 <div class="tab-pane fade show active modal-body bg-light" id="home" role="tabpanel" aria-labelledby="home-tab">
-                    <h4><?php _e( 'Enter your oscommerce database information', 'woocommerce-osc-sync' ); ?> </h4>
+                    <h4><?php _e('Enter your oscommerce database information', 'woocommerce-osc-sync'); ?> </h4>
                     <div class="alert alert-warning" role="alert">
-                        <?php _e( 'You will need remote access to your oscommerce database', 'woocommerce-osc-sync' ); ?> 
+                        <?php _e('You will need remote access to your oscommerce database', 'woocommerce-osc-sync'); ?> 
                     </div>                    
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label ><?php _e( 'osCommerce store URL: ', 'woocommerce-osc-sync' ); ?></label>
+                                <label ><?php _e('osCommerce store URL: ', 'woocommerce-osc-sync'); ?></label>
                                 <input class="form-control" type="text" name="store_url" value="<?php echo sanitize_text_field($_POST['store_url']); ?>">
-                                <small><?php _e( 'Example: https://www.yoursite.com/', 'woocommerce-osc-sync' ); ?></small>   
+                                <small><?php _e('Example: https://www.yoursite.com/', 'woocommerce-osc-sync'); ?></small>   
                                 </label>
                             </div>
-                            <div class="form-group"><label ><?php _e( 'osCommerce Database Host: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="store_host" value="localhost"></div>
-                            <div class="form-group"><label ><?php _e( 'osCommerce Database Name: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="store_dbname" value="<?php echo sanitize_text_field($_POST['store_dbname']); ?>"></div>
+                            <div class="form-group"><label ><?php _e('osCommerce Database Host: ', 'woocommerce-osc-sync'); ?></label><input class="form-control" type="text" name="store_host" value="localhost"></div>
+                            <div class="form-group"><label ><?php _e('osCommerce Database Name: ', 'woocommerce-osc-sync'); ?></label><input class="form-control" type="text" name="store_dbname" value="<?php echo sanitize_text_field($_POST['store_dbname']); ?>"></div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label ><?php _e( 'Images directory: ', 'woocommerce-osc-sync' ); ?></label>
+                                <label ><?php _e('Images directory: ', 'woocommerce-osc-sync'); ?></label>
                                 <input class="form-control" type="text" name="images_url" value="<?php echo sanitize_text_field($_POST['images_url']); ?>">
-                                <small><?php _e( 'Empty directory as default "image"', 'woocommerce-osc-sync' ); ?></small>                                
+                                <small><?php _e('Empty directory as default "image"', 'woocommerce-osc-sync'); ?></small>                                
                             </div>
-                            <div class="form-group"><label ><?php _e( 'osCommerce Database User: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="store_user" value="<?php echo sanitize_text_field($_POST['store_user']); ?>"></div>
-                            <div class="form-group"><label ><?php _e( 'osCommerce Database Password: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="store_pass" value="<?php echo sanitize_text_field($_POST['store_pass']); ?>"></div>                            
+                            <div class="form-group"><label ><?php _e('osCommerce Database User: ', 'woocommerce-osc-sync'); ?></label><input class="form-control" type="text" name="store_user" value="<?php echo sanitize_text_field($_POST['store_user']); ?>"></div>
+                            <div class="form-group"><label ><?php _e('osCommerce Database Password: ', 'woocommerce-osc-sync'); ?></label><input class="form-control" type="text" name="store_pass" value="<?php echo sanitize_text_field($_POST['store_pass']); ?>"></div>                            
                         </div>
                     </div>
                 </div>
                 <div class="tab-pane fade  modal-body bg-light" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                    <h3><?php _e( 'Import data from osCommerce', 'woocommerce-osc-sync' ); ?></h3>
+                    <h3><?php _e('Import data from osCommerce', 'woocommerce-osc-sync'); ?></h3>
                     <div class="alert alert-info" role="alert">
-                       <?php _e( 'For big products database can import in steps (use fields Offset & Limit)', 'woocommerce-osc-sync' ); ?>
+                        <?php _e('For big products database can import in steps (use fields Offset & Limit)', 'woocommerce-osc-sync'); ?>
                     </div>                                       
                     <div class="col-md-12">
-                        <div class="form-group"><label ><?php _e( 'Language: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="lang" value="<?php echo sanitize_text_field($_POST['lang']); ?>"><small><?php _e( 'Id from osCommerce lang table', 'woocommerce-osc-sync' ); ?></small></div>
-                        <div class="form-group"><label ><?php _e( 'Offset: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="offset" value="<?php echo sanitize_text_field($_POST['offset']); ?>"><small><?php _e( 'Last product imported', 'woocommerce-osc-sync' ); ?></small></div>
-                        <div class="form-group"><label ><?php _e( 'Limit: ', 'woocommerce-osc-sync' ); ?></label><input class="form-control" type="text" name="limit" value="<?php echo sanitize_text_field($_POST['limit']); ?>"><small><?php _e( 'how many products imported', 'woocommerce-osc-sync' ); ?></small></div>        
+                        <div class="form-group"><label ><?php _e('Language: ', 'woocommerce-osc-sync'); ?></label><input class="form-control" type="text" name="lang" value="<?php echo sanitize_text_field($_POST['lang']); ?>"><small><?php _e('Id from osCommerce lang table', 'woocommerce-osc-sync'); ?></small></div>
+                        <div class="form-group"><label ><?php _e('Offset: ', 'woocommerce-osc-sync'); ?></label><input class="form-control" type="text" name="offset" value="<?php echo sanitize_text_field($_POST['offset']); ?>"><small><?php _e('Last product imported', 'woocommerce-osc-sync'); ?></small></div>
+                        <div class="form-group"><label ><?php _e('Limit: ', 'woocommerce-osc-sync'); ?></label><input class="form-control" type="text" name="limit" value="<?php echo sanitize_text_field($_POST['limit']); ?>"><small><?php _e('how many products imported', 'woocommerce-osc-sync'); ?></small></div>        
                     </div>
 
                 </div>
                 <div class="tab-pane fade  modal-body bg-light" id="contact" role="tabpanel" aria-labelledby="contact-tab">
-                    <h3><?php _e( 'Data to Import:', 'woocommerce-osc-sync' ); ?></h3>
+                    <h3><?php _e('Data to Import:', 'woocommerce-osc-sync'); ?></h3>
                     <div class="alert alert-warning" role="alert">
-                       <?php _e( 'It is recommended to follow the order of the list', 'woocommerce-osc-sync' ); ?>
+                        <?php _e('It is recommended to follow the order of the list', 'woocommerce-osc-sync'); ?>
                     </div>                     
                     <div class="row">
                         <div class="col-md-12">
@@ -879,13 +883,13 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                 if ((int) $_POST['dtype']['customers']) {
                                     echo " checked ";
                                 }
-                                ?>><?php _e( 'Customers (passwords will not be transferred)', 'woocommerce-osc-sync' ); ?></label><br>
+                                ?>><?php _e('Customers (passwords will not be transferred)', 'woocommerce-osc-sync'); ?></label><br>
 
                             <label ><input class="form-control" type="checkbox" name="dtype[categories]" value="1" <?php
                                 if ((int) $_POST['dtype']['categories']) {
                                     echo " checked ";
                                 }
-                                ?>><?php _e( 'Categories', 'woocommerce-osc-sync' ); ?></label><br>
+                                ?>><?php _e('Categories', 'woocommerce-osc-sync'); ?></label><br>
                            <!-- <label ><input class="form-control" type="checkbox" name="dtype[taxes]" value="1" <?php
                             if ((int) $_POST['dtype']['taxes']) {
                                 echo " checked ";
@@ -895,32 +899,32 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                                 if ((int) $_POST['dtype']['products']) {
                                     echo " checked ";
                                 }
-                                ?>><?php _e( 'Products', 'woocommerce-osc-sync' ); ?></label><br>
+                                ?>><?php _e('Products', 'woocommerce-osc-sync'); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[delete]" value="1"  <?php
                                 if ((int) $_POST['dtype']['delete']) {
                                     echo " checked ";
                                 }
-                                ?>><?php _e( 'Products delete images', 'woocommerce-osc-sync' ); ?></label><br>
+                                ?>><?php _e('Products delete images', 'woocommerce-osc-sync'); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[image]" value="1"  <?php
                                 if ((int) $_POST['dtype']['image']) {
                                     echo " checked ";
                                 }
-                                ?>><?php _e( 'Products Prefered image', 'woocommerce-osc-sync' ); ?></label><br>
+                                ?>><?php _e('Products Prefered image', 'woocommerce-osc-sync'); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[gallery]" value="1"  <?php
                                 if ((int) $_POST['dtype']['gallery']) {
                                     echo " checked ";
                                 }
-                                ?>><?php _e( 'Products gallery', 'woocommerce-osc-sync' ); ?></label><br>
+                                ?>><?php _e('Products gallery', 'woocommerce-osc-sync'); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[orders]" value="1" <?php
                                 if ((int) $_POST['dtype']['orders']) {
                                     echo " checked ";
                                 }
-                                ?>><?php _e( 'Orders', 'woocommerce-osc-sync' ); ?></label><br>
+                                ?>><?php _e('Orders', 'woocommerce-osc-sync'); ?></label><br>
                             <label ><input class="form-control" type="checkbox" name="dtype[pages]" value="1"  <?php
                                 if ((int) $_POST['dtype']['pages']) {
                                     echo " checked ";
                                 }
-                                ?>><?php _e( 'Information Pages', 'woocommerce-osc-sync' ); ?></label>
+                                ?>><?php _e('Information Pages', 'woocommerce-osc-sync'); ?></label>
 
 
                         </div>
@@ -933,8 +937,8 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
                         echo " checked ";
                     }
                     ?>></label>
-                <small><?php _e( '(Display and save a log file in WordPress root folder)', 'woocommerce-osc-sync' ); ?></small>
-                <div class="form-group"><input type="submit" value="<?php _e( 'Import Data', 'woocommerce-osc-sync' ); ?>"  class="btn btn-primary btn-lg"></div>                
+                <small><?php _e('(Display and save a log file in WordPress root folder)', 'woocommerce-osc-sync'); ?></small>
+                <div class="form-group"><input type="submit" value="<?php _e('Import Data', 'woocommerce-osc-sync'); ?>"  class="btn btn-primary btn-lg"></div>                
             </div>            
 
         </form>
@@ -965,5 +969,5 @@ function otw_log($log, $data) {
     }
 }
 
-load_plugin_textdomain( 'woocommerce-osc-sync', false, basename( dirname( __FILE__ ) ) . '/languages' );
+load_plugin_textdomain('woocommerce-osc-sync', false, basename(dirname(__FILE__)) . '/languages');
 ?>
